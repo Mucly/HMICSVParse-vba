@@ -23,7 +23,7 @@ Function GetTransDict(DB As String)
     Dim rowx As Integer
 
     For rowx = 2 To DBWorkSheet.UsedRange.Rows.Count ' i表示行号，因为第一行（DataID、中文、英文） 不需要加入字典，故从2开始
-        colx = DBWorkSheet.Cells(rowx, tagColx)
+        colx = DBWorkSheet.Cells(rowx, tagColx).Value
         If Not (colx = "") Then
             mean = DBWorkSheet.Cells(rowx, meanColx) ' 列向右偏移1，表示中文翻译列
             prec = DBWorkSheet.Cells(rowx, precColx) ' 列向右偏移2，表示英文翻译列

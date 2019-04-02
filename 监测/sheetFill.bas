@@ -1,34 +1,34 @@
 Option Explicit
-' * Ã¿´ÎÔØÈëÇ°£¬Çå¿ÕËùÓĞµ¥Ôª¸ñ ---
+' * æ¯æ¬¡è½½å…¥å‰ï¼Œæ¸…ç©ºæ‰€æœ‰å•å…ƒæ ¼ ---
 Function ClearCurSheet()
     Cells.Select
     Selection.ClearContents
 End Function
 
-' * ¶ÁÈ¡csvÎÄ¼ş²¢¶ÔÕÕ×Öµä·­Òëºó£¬Ìî³äÖÁµ±Ç°sheet
-' @Parameter  resCsv        - Ô´csvÎÄ¼ş
-'                      offsetRowx - Ìî³äĞĞÆ«ÒÆÎ»ÖÃ
-' @Remind sheetÀïÃæµÄĞĞÁĞ´Ó1¿ªÊ¼
+' * è¯»å–csvæ–‡ä»¶å¹¶å¯¹ç…§å­—å…¸ç¿»è¯‘åï¼Œå¡«å……è‡³å½“å‰sheet
+' @Parameter  resCsv        - æºcsvæ–‡ä»¶
+'                      offsetRowx - å¡«å……è¡Œåç§»ä½ç½®
+' @Remind sheeté‡Œé¢çš„è¡Œåˆ—ä»1å¼€å§‹
 Function ParseCsvAndFillCell(resCsv As Variant, offsetRowx As Integer)
-    ' ½ûÓÃ×Ô¶¯Ë¢ĞÂ£¬¼ÆËãÄ£Ê½ÎªÊÖ¶¯
+    ' ç¦ç”¨è‡ªåŠ¨åˆ·æ–°ï¼Œè®¡ç®—æ¨¡å¼ä¸ºæ‰‹åŠ¨
     Application.ScreenUpdating = False
 
-    ' PART 1 Çå¿Õµ±Ç°sheetµÄËùÓĞµ¥Ôª¸ñÄÚÈİºó£¬¹Ø±ÕÆÁÄ»¸üĞÂ£¬ÌáÉı½âÎöËÙ¶È
+    ' PART 1 æ¸…ç©ºå½“å‰sheetçš„æ‰€æœ‰å•å…ƒæ ¼å†…å®¹åï¼Œå…³é—­å±å¹•æ›´æ–°ï¼Œæå‡è§£æé€Ÿåº¦
     ClearCurSheet
 
-    ' PART 2 ÉèÖÃÊı¾İ¶ÔÏó
+    ' PART 2 è®¾ç½®æ•°æ®å¯¹è±¡
     Dim fillRowx As Integer
     fillRowx = offsetRowx ' fill the cell start from the third row
 
-    ' PART 3 ÖğĞĞ¶ÁÈ¡csvÎÄ¼ş
-    Dim curLine As String, fillContent As String ' µ±Ç°ĞĞÄÚÈİ£¨×Ö·û´®¸ñÊ½£©¡¢Ìî³äµÄÄÚÈİ
+    ' PART 3 é€è¡Œè¯»å–csvæ–‡ä»¶
+    Dim curLine As String, fillContent As String ' å½“å‰è¡Œå†…å®¹ï¼ˆå­—ç¬¦ä¸²æ ¼å¼ï¼‰ã€å¡«å……çš„å†…å®¹
     ' Range("A3").Resize(rows, colx).Value = a2D
 
-    ' PART 2 µÚÒ»´Î±éÀú£¬¹¹ÔìÒ»¸ö¶şÎ¬Êı¾İ£¬ÎªÁË¼Ó¿ìµ¥Ôª¸ñÌî³äËÙ¶È
-    Dim n2DRows As Integer ' ÎÄ¼ş×ÜĞĞÊı
+    ' PART 2 ç¬¬ä¸€æ¬¡éå†ï¼Œæ„é€ ä¸€ä¸ªäºŒç»´æ•°æ®ï¼Œä¸ºäº†åŠ å¿«å•å…ƒæ ¼å¡«å……é€Ÿåº¦
+    Dim n2DRows As Integer ' æ–‡ä»¶æ€»è¡Œæ•°
     Dim n2DCols As Integer
-    Open resCsv For Input As #1 ' ´ò¿ªcsvÎÄ¼ş£¬file number #1
-    Do While Not EOF(1) ' ÖğĞĞÑ­»· #1ÎÄ¼ş
+    Open resCsv For Input As #1 ' æ‰“å¼€csvæ–‡ä»¶ï¼Œfile number #1
+    Do While Not EOF(1) ' é€è¡Œå¾ªç¯ #1æ–‡ä»¶
         Line Input #1, curLine
 
         If n2DCols = 0 Then
@@ -42,30 +42,27 @@ Function ParseCsvAndFillCell(resCsv As Variant, offsetRowx As Integer)
     Loop
     Close #1
 
-    ' PART 3 µÚ¶ş´Î±éÀú£¬¸ø¶şÎ¬Êı×é¸³Öµ
+    ' PART 3 ç¬¬äºŒæ¬¡éå†ï¼Œç»™äºŒç»´æ•°ç»„èµ‹å€¼
     Dim csvCurRowx As Integer
-    Dim a2D(0 To 5001, 0 To 50) As Variant ' ÕâÀïÖ»ÄÜ³£Á¿
+    Dim a2D(0 To 5001, 0 To 50) As Variant ' è¿™é‡Œåªèƒ½å¸¸é‡
     csvCurRowx = 0
     Open resCsv For Input As #1
-    Do While Not EOF(1) ' ÖğĞĞÑ­»· #1ÎÄ¼ş
+    Do While Not EOF(1) ' é€è¡Œå¾ªç¯ #1æ–‡ä»¶
         Line Input #1, curLine
 
-        Dim inx As Integer
+        Dim inx As Integer, inx2 As Integer
+        inx2 = 0
         For inx = 0 To n2DCols
             Dim aRowData2 As Variant
-            Dim nTmp as Integer
             Dim key as String
-            ' nTmp = inx + 1
-            nTmp = inx
-            key = nTmp & ""
+            key = inx & ""
 
             if csvCurRowx = 0 Then
                 aRowData2 = Split(curLine, ",")
                 if g_meanDict.exists(key) Then
                     aRowData2(inx) = g_meanDict(key)
                 End if
-                a2D(csvCurRowx, inx) = aRowData2(inx)
-            Else ' ²¹ÉÏĞòºÅ
+            Else ' è¡¥ä¸Šåºå·
                 curLine = csvCurRowx & curLine
                 aRowData2 = Split(curLine, ",")
 
@@ -76,36 +73,39 @@ Function ParseCsvAndFillCell(resCsv As Variant, offsetRowx As Integer)
                     prec = 0
                 End if
 
-                If prec = 0 Then
-                    a2D(csvCurRowx, inx) = aRowData2(inx)
-                Else
+                If prec <> 0 Then
                     Dim maxBitWight as Integer, digit as Integer
                     maxBitWight = Application.WorksheetFunction.Power(10, prec)
-                    digit = Len(aRowData2(inx)) ' Ô´Êı×ÖµÄÎ»Êı
+                    digit = Len(aRowData2(inx)) ' æºæ•°å­—çš„ä½æ•°
 
-                    Dim head As String, tail As String, fmt As String   ' ÅäÖÃformatµÄ¸ñÊ½
+                    Dim head As String, tail As String, fmt As String   ' é…ç½®formatçš„æ ¼å¼
                     fmt = "General"
 
-                    ' #4 ¾«¶È > Î»Êı
+                    ' #4 ç²¾åº¦ > ä½æ•°
                     If prec > digit Then
                         head = "0"
                         tail = String(prec, "0")
                         fmt = head + "." + tail
-                    ' ¾«¶È < Î»Êı
+                    ' ç²¾åº¦ < ä½æ•°
                     ElseIf prec < digit Then
                         head = String(digit - prec, "0")
                         tail = String(prec, "0")
                         head = "0"
                         fmt = head + "." + tail
-                    ' ¾«¶È = Î»Êı
+                    ' ç²¾åº¦ = ä½æ•°
                     Else
                         head = "0"
                         tail = String(prec, "0")
                         fmt = head + "." + tail
                     End If   ' #4
-                    a2D(csvCurRowx, inx) = Format(aRowData2(inx) / maxBitWight, fmt)
+                    aRowData2(inx) = Format(aRowData2(inx) / maxBitWight, fmt)
                 End If
             End if
+
+            if g_visbDict(key) <> 0 Then
+                a2D(csvCurRowx, inx2) = aRowData2(inx)
+                inx2 = inx2 + 1
+            end if
         Next
 
         csvCurRowx = csvCurRowx + 1
@@ -115,8 +115,7 @@ Function ParseCsvAndFillCell(resCsv As Variant, offsetRowx As Integer)
     Range("A3").Resize(n2DRows + 1, n2DCols + 1) = a2D
 
     ' END
-    Application.ScreenUpdating = True  ' »¹Ô­ÆÁÄ»Ë¢ĞÂ
-    MsgBox "½âÎö³É¹¦£¡" ' µ¯³ö³É¹¦ÌáÊ¾
+    Application.ScreenUpdating = True  ' è¿˜åŸå±å¹•åˆ·æ–°
+    MsgBox "è§£ææˆåŠŸï¼" ' å¼¹å‡ºæˆåŠŸæç¤º
 
 End Function
-
