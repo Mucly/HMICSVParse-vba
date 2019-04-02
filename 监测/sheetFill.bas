@@ -83,7 +83,6 @@ Function ParseCsvAndFillCell(resCsv As Variant, offsetRowx As Integer)
                         sFmt = sHead + "." + sTail
                     ' 精度 < 位数
                     ElseIf prec < nDigit Then
-                        sHead = String(nDigit - prec, "0")
                         sTail = String(prec, "0")
                         sHead = "0"
                         sFmt = sHead + "." + sTail
