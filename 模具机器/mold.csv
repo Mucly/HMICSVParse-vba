@@ -2,6 +2,7 @@ MoldName,SaveDate,Materials,Colour,MoldNum
 9,2019/3/4-16:17:43,9,9,9
 ,,,,
 DataID,DataValue,,,
+0x0,666,,,
 0x400,123,,,
 0x401,321,,,
 0x402,111,,,
