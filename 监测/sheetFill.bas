@@ -16,89 +16,84 @@ Function ParseCsvAndFillCell(resCsv As Variant, offsetRowx As Integer)
     ' PART 1 清空当前sheet的所有单元格内容后，关闭屏幕更新，提升解析速度
     ClearCurSheet
 
-    ' PART 2 设置数据对象
-    Dim fillRowx As Integer
-    fillRowx = offsetRowx ' fill the cell start from the third row
-
-    ' PART 3 逐行读取csv文件
-    Dim curLine As String, fillContent As String ' 当前行内容（字符串格式）、填充的内容
-    ' Range("A3").Resize(rows, colx).Value = a2D
-
-    ' PART 2 第一次遍历，构造一个二维数据，为了加快单元格填充速度
-    Dim n2DRows As Integer ' 文件总行数
-    Dim n2DCols As Integer
+    ' PART 2 第一次逐行读取csv文件，获取csv文件的总行、列数，用以绘制单元格内容
+    Dim sCurLine As String
+    Dim n2DRows As Integer, n2DCols As Integer
     Open resCsv For Input As #1 ' 打开csv文件，file number #1
-    Do While Not EOF(1) ' 逐行循环 #1文件
-        Line Input #1, curLine
+    ' --- 逐行读取csv文件，获取csv文件的总行、列数
+    Do While Not EOF(1)
+        Line Input #1, sCurLine
 
+        ' 通过csv的第一行内容
         If n2DCols = 0 Then
             Dim aRowData As Variant
-            aRowData = Split(curLine, ",")
+            aRowData = Split(sCurLine, ",")
             n2DCols = UBound(aRowData)
         End If
-
         n2DRows = n2DRows + 1
-
     Loop
     Close #1
 
-    ' PART 3 第二次遍历，给二维数组赋值
+    ' PART 3 第二次逐行读取csv文件，给二维数组赋值
     Dim csvCurRowx As Integer
     Dim a2D(0 To 5001, 0 To 50) As Variant ' 这里只能常量
     csvCurRowx = 0
     Open resCsv For Input As #1
     Do While Not EOF(1) ' 逐行循环 #1文件
-        Line Input #1, curLine
+        Line Input #1, sCurLine
 
+        ' 因为有需要隐藏的数据列，故建立一个inx2，隐藏的数据就不用写到二维数组内了
         Dim inx As Integer, inx2 As Integer
         inx2 = 0
         For inx = 0 To n2DCols
             Dim aRowData2 As Variant
             Dim key as String
-            key = inx & ""
+            key = (inx - 1) & "" ' key = -1，代表第一列
 
+            ' 将csv的第一行，按照meanDict进行翻译
             if csvCurRowx = 0 Then
-                aRowData2 = Split(curLine, ",")
+                aRowData2 = Split(sCurLine, ",")
                 if g_meanDict.exists(key) Then
                     aRowData2(inx) = g_meanDict(key)
                 End if
-            Else ' 补上序号
-                curLine = csvCurRowx & curLine
-                aRowData2 = Split(curLine, ",")
+            Else ' 第二行开始的数据，需在前面补上序号
+                sCurLine = csvCurRowx & sCurLine
+                aRowData2 = Split(sCurLine, ",")
 
                 Dim prec as Integer
                 if g_precDict.exists(key) Then
-                    prec = Val(g_precDict(key))
+                    prec = g_precDict(key)
                 Else
                     prec = 0
                 End if
 
+                ' 如果数据精度不为0，则进行精度格式化处理
                 If prec <> 0 Then
-                    Dim maxBitWight as Integer, digit as Integer
-                    maxBitWight = Application.WorksheetFunction.Power(10, prec)
-                    digit = Len(aRowData2(inx)) ' 源数字的位数
+                    Dim nMaxBitWeight as Integer, nDigit as Integer
+                    nMaxBitWeight = Application.WorksheetFunction.Power(10, prec) ' 数字的权位（重）
+                    nDigit = Len(aRowData2(inx)) ' 源数字的位数
 
-                    Dim head As String, tail As String, fmt As String   ' 配置format的格式
-                    fmt = "General"
+                    Dim sHead As String, sTail As String, sFmt As String   ' 配置format的格式
+                    sFmt = "General"
 
-                    ' #4 精度 > 位数
-                    If prec > digit Then
-                        head = "0"
-                        tail = String(prec, "0")
-                        fmt = head + "." + tail
+                    ' 精度 > 位数
+                    If prec > nDigit Then
+                        sHead = "0"
+                        sTail = String(prec, "0")
+                        sFmt = sHead + "." + sTail
                     ' 精度 < 位数
-                    ElseIf prec < digit Then
-                        head = String(digit - prec, "0")
-                        tail = String(prec, "0")
-                        head = "0"
-                        fmt = head + "." + tail
+                    ElseIf prec < nDigit Then
+                        sHead = String(nDigit - prec, "0")
+                        sTail = String(prec, "0")
+                        sHead = "0"
+                        sFmt = sHead + "." + sTail
                     ' 精度 = 位数
                     Else
-                        head = "0"
-                        tail = String(prec, "0")
-                        fmt = head + "." + tail
-                    End If   ' #4
-                    aRowData2(inx) = Format(aRowData2(inx) / maxBitWight, fmt)
+                        sHead = "0"
+                        sTail = String(prec, "0")
+                        sFmt = sHead + "." + sTail
+                    End If
+                    aRowData2(inx) = Format(aRowData2(inx) / nMaxBitWeight, sFmt)
                 End If
             End if
 
@@ -112,6 +107,7 @@ Function ParseCsvAndFillCell(resCsv As Variant, offsetRowx As Integer)
     Loop
     Close #1
 
+    ' PART 4 以A3单元格为原点，按照二维数组数据进行单元格批量绘制
     Range("A3").Resize(n2DRows + 1, n2DCols + 1) = a2D
 
     ' END
