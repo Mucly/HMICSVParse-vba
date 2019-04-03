@@ -8,7 +8,7 @@ Function GetTransDict(DB As String)
     Dim DBWorkSheet As Worksheet
     Set DBWorkSheet = Worksheets(DB)
 
-    ' PART 2 创建多国语言字典
+    ' PART 2 创建字典
     Set g_meanDict = CreateObject("Scripting.Dictionary")
     Set g_precDict = CreateObject("Scripting.Dictionary")
     Set g_visbDict = CreateObject("Scripting.Dictionary")
@@ -19,20 +19,19 @@ Function GetTransDict(DB As String)
     Const precColx  As Integer = 3
     Const visbColx As Integer = 4
 
-    Dim colx As String, mean As String, prec As String, visb As String
+    Dim key As String, mean As String, prec As String, visb As String
     Dim rowx As Integer
 
-    For rowx = 2 To DBWorkSheet.UsedRange.Rows.Count ' i表示行号，因为第一行（DataID、中文、英文） 不需要加入字典，故从2开始
-        colx = DBWorkSheet.Cells(rowx, tagColx).Value
-        If Not (colx = "") Then
-            mean = DBWorkSheet.Cells(rowx, meanColx) ' 列向右偏移1，表示中文翻译列
-            prec = DBWorkSheet.Cells(rowx, precColx) ' 列向右偏移2，表示英文翻译列
-            visb = DBWorkSheet.Cells(rowx, visbColx) ' 列向右偏移3，表示精度翻译列
+    For rowx = 2 To DBWorkSheet.UsedRange.Rows.Count ' i表示行号，第一行不需要加入字典，故从2开始
+        key = DBWorkSheet.Cells(rowx, tagColx).Value
+        If key <> "" Then
+            mean = DBWorkSheet.Cells(rowx, meanColx)
+            prec = DBWorkSheet.Cells(rowx, precColx)
+            visb = DBWorkSheet.Cells(rowx, visbColx)
 
-            g_meanDict(colx) = mean
-            g_precDict(colx) = prec
-            g_visbDict(colx) = visb
-
+            g_meanDict(key) = mean
+            g_precDict(key) = prec
+            g_visbDict(key) = visb
         End If
     Next
 End Function
