@@ -6,7 +6,7 @@ Private Sub CommandButton1_Click()
     ' PART 1 获取多国语言字典
     Dim DBSheet As Object
 
-    Call moldDict.GetTransDict("对照表")
+    Call moldDict.GetDict("对照表")
 
     ' PART 2 弹出csv文件explorer
     Dim csvRes As Variant
@@ -21,7 +21,7 @@ End Sub
 
 ' 汇出csv文件
 Private Sub CommandButton2_Click()
-    GetTransDict ("moldDB")
+    Call moldDict.GetDict("moldDB")
 
     ' 获取当前sheet名
     Dim curSheetName As String

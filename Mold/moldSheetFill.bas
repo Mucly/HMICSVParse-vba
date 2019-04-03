@@ -71,13 +71,24 @@ Sub CreateSheets(groupDict As Object)
     ' End If
     ' Set d = Nothing
 
-    Dim key as Variant
-    For Each key In groupDict
-        Debug.print groupDict(key)
+    ' Call DelGroupSheets()
+    Dim aKeys as Variant, nInx as Integer
+    aKeys = groupDict.keys
+    For nInx = 0 To UBound(aKeys)
+        Debug.print aKeys(nInx)
     Next
 
+End Sub
 
-
+Sub DelGroupSheets()
+    Application.DisplayAlerts = False
+    Dim nInx as Integer
+    for nInx = 0 To Sheets.Count - 1
+        if nInx > 1 Then
+            Worksheets(Sheets(nInx)).Delete
+        End If
+    Next
+    Application.DisplayAlerts = True
 End Sub
 
 ' sheet保护（注：无法插入删除行） + 锁定模具头
