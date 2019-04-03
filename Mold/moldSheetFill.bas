@@ -46,14 +46,14 @@ Function ParseCsvAndFillCell(resCsv As Variant)
 
     ' END
     Application.ScreenUpdating = True  ' 还原屏幕刷新
-    MsgBox "解析成功！" ' 弹出成功提示
+    ' MsgBox "解析成功！" ' 弹出成功提示
 
 End Function
 
 
 Sub CreateSheets(groupDict As Object)
-    Dim DBSheet As Worksheet
-    Set DBSheet = Worksheets("对照表")
+    Dim HeadSheet As Worksheet
+    Set HeadSheet = Sheets(2)
 
     ' Dim wsh As Worksheet
     ' Set d = CreateObject("Scripting.Dictionary")
@@ -71,21 +71,25 @@ Sub CreateSheets(groupDict As Object)
     ' End If
     ' Set d = Nothing
 
-    ' Call DelGroupSheets()
+    Call DelGroupSheets()
     Dim aKeys as Variant, nInx as Integer
     aKeys = groupDict.keys
+
     For nInx = 0 To UBound(aKeys)
-        Debug.print aKeys(nInx)
+        Sheets.Add After:=HeadSheet
+        ActiveSheet.Name = aKeys(nInx)
     Next
 
 End Sub
 
+' 删除分组sheet
 Sub DelGroupSheets()
     Application.DisplayAlerts = False
     Dim nInx as Integer
-    for nInx = 0 To Sheets.Count - 1
-        if nInx > 1 Then
-            Worksheets(Sheets(nInx)).Delete
+    ' sheet从1开始计数
+    for nInx = 1 To Sheets.Count
+        if nInx > 2 Then
+            Worksheets(Sheets(3)).Delete
         End If
     Next
     Application.DisplayAlerts = True
@@ -103,6 +107,3 @@ Sub LockMoldHeader(bLocked)
     End If
 
 End Sub
-
-
-
