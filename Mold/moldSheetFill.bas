@@ -16,15 +16,14 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     call CreateSheets(g_sheetDict)
 
     ' PART 3
-    Call SetSheetCells(resCsv)
+    Call FillSheetCells(resCsv)
 
     Call BeautySheets(g_sheetDict)
 
     ' END
+    Sheets(2).Activate
+
     Application.ScreenUpdating = True  ' Restore
-
-    Sheets(3).Activate
-
     MsgBox "Success！"
 
 End Function
@@ -41,8 +40,8 @@ Function GetArrayVaildCnt(a2D As Variant)
     GetArrayVaildCnt = nFillRowx
 End Function
 
-Sub SetSheetCells(resCsv As Variant)
-    ' PART 3 Read Csv By Line, Then Set Each Group's a2D in DataDict
+Sub FillSheetCells(resCsv As Variant)
+    ' PART 1 Read Csv By Line, Then Set Each Group's a2D in DataDict
     Dim sCurLine As String
     Dim aCsvRowData As Variant
     Dim nCsvCurRowx As Integer
@@ -53,13 +52,14 @@ Sub SetSheetCells(resCsv As Variant)
     Const cnColx as Integer = 3
     Const enColx as Integer = 4
 
+    ' PART 2 Iterate csv file and fill Cells
     Do While Not EOF(1)
         Line Input #1, sCurLine
         aCsvRowData = Split(sCurLine, ",")
 
         Dim colx As Integer, fillColx as Integer, cellValue As String, DataID As String, group As String
         DataID = aCsvRowData(0) : fillColx = 0 :
-        ' the top 3 lines's content is MoldHeader, 4th lines is unValid, others are [ DataID, DataValue, CN, EN ]
+        ' the top 3 lines's content is MoldHeader, 4th lines is unValid, others likes [ "0x400", 123, "我是中文翻译", "English Translation" ]
         If nCsvCurRowx > 4 Then
             Dim fillSheet As Worksheet, fillRowx as Integer
             ' 仅对有分组信息的资料进行呈现
@@ -71,18 +71,21 @@ Sub SetSheetCells(resCsv As Variant)
 
                 ' --- 遍历每行数据
                 For colx = 0 To UBound(aCsvRowData)
+                    Dim fmt As String : fmt = "General"
                     cellValue = aCsvRowData(colx)
                     fillColx = colx + 1
+
                     ' this colx need cell prec-format
                     If fillColx = valueColx then
-                        Dim prec As Integer, head As String, tail As String, fmt As String
-                        fmt = "General"
+                        Dim prec As Integer, head As String, tail As String
                         If g_precDict.exists(DataID) Then
                             prec = g_precDict(DataID)
 
+                            Dim maxBitWeight As Variant, digit As Integer
+                            maxBitWeight = 1
+                            ' prec <> 0 Float Only
                             if prec <> 0 then
                                 cellValue = Replace(cellValue, ".", "")
-                                Dim maxBitWeight As Variant, digit As Integer
                                 digit = Len(cellValue) ' 源数字的位数
                                 maxBitWeight = Application.WorksheetFunction.Power(10, prec)
                                 If prec > digit Then
@@ -92,15 +95,18 @@ Sub SetSheetCells(resCsv As Variant)
                                 ElseIf prec < digit Then
                                     head = String(digit - prec, "0")
                                     tail = String(prec, "0")
-                                    head = "0"
                                     fmt = head + "." + tail
                                 Else
                                     head = "0"
                                     tail = String(prec, "0")
-                                    fmt = head + "." + tail
+                                    fmt = head + "." +  tail
                                 End If
-                                cellValue = Format(cellValue / maxBitWeight, fmt)
+                            Else
+                            ' prec = 0 : Positive Integer Only
+                                fmt = "0"
                             End if
+
+                            cellValue = Format(cellValue / maxBitWeight, fmt)
                         End If
                     ' this colx need get cn trans
                     ElseIf fillColx = cnColx Then
@@ -160,13 +166,20 @@ Sub CreateSheets(sheetsDict As Object)
 End Sub
 
 Sub BeautySheets(sheetsDict As Object)
-    Dim aKeys As Variant, nInx As Integer
-    aKeys = sheetsDict.keys
-    Dim sheetOffset as Integer : sheetOffset = 2 + 1 ' Sheets(inx_start_from_1)
-    For nInx = 0 To UBound(aKeys)
-        Dim newSheet as Worksheet : set newSheet = Sheets(nInx + sheetOffset)
+    Dim group as Variant
+    For Each group in sheetsDict
+        Dim sh as Worksheet : set sh = Sheets(group)
 
-        With newSheet.Cells
+        ' Freeze The 1st Row
+        sh.Activate
+        With ActiveWindow
+            .SplitColumn = 0
+            .SplitRow = 1
+        End With
+        ActiveWindow.FreezePanes = True
+
+        ' Cells Format
+        With Cells
             .Columns.AutoFit
             .HorizontalAlignment = xlHAlignCenter
             .Font.Name = "微软雅黑"
