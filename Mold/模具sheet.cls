@@ -1,17 +1,15 @@
 Option Explicit
-' TODO ½âÎöÊ±²»Òª¹Ì¶¨ÁĞºÅ£¬¿ÉÒÔ¸ù¾İ¹Ø¼ü×ÖÀ´È·¶¨ÁĞºÅ
-' ÀıÈç ¶Áµ½DataID¹Ø¼ü×Öºó£¬»ñÈ¡DataIDÁĞºÅ£¬DataIDValueÍ¬Àí
-' --- click ÊÂ¼ş ---
+' --- click  ---
 Private Sub CommandButton1_Click()
-    ' PART 1 »ñÈ¡¶à¹úÓïÑÔ×Öµä
+    ' PART 1 get Dict
     Dim DBSheet As Object
 
-    Call moldDict.GetDict("¶ÔÕÕ±í")
+    Call moldDict.GetDict("å¯¹ç…§è¡¨")
 
-    ' PART 2 µ¯³öcsvÎÄ¼şexplorer
+    ' PART 2 file explorer
     Dim csvRes As Variant
-    csvRes = Application.GetOpenFilename("Ñ¡ÔñÉú³ÉµÄcsvÎÄ¼ş£¨*.csv£©, *.csv")
-    ' Èç¹ûÑ¡ÔñÁËcsvÎÄ¼ş£¬Ôò½øÈë½âÎö¡¢·­Òë¡¢Ìî³ä¹¤×÷
+    csvRes = Application.GetOpenFilename("é€‰æ‹©ç”Ÿæˆçš„csvæ–‡ä»¶ï¼ˆ*.csvï¼‰, *.csv")
+
     If csvRes = Empty Then
         Exit Sub
     Else
@@ -19,77 +17,78 @@ Private Sub CommandButton1_Click()
     End If
 End Sub
 
-' »ã³öcsvÎÄ¼ş
+Sub writeCsvLine(rows as Integer, cols as Integer, offset as Integer, dataSheet as Worksheet, expFile as Object)
+    Dim rowx as Integer, colx as Integer, cellValue as String
+    Dim sCurLine as String : sCurLine = ""
+
+    For rowx = offset To rows
+        For colx = 1 To cols
+            cellValue = dataSheet.Cells(rowx, colx).Text
+            If colx = 1 Then
+                sCurLine = cellValue
+            Else
+                sCurLine = sCurLine & "," & cellValue
+            End If
+        Next
+        expFile.writeline (sCurLine)
+    Next
+End Sub
+
+' export file
 Private Sub CommandButton2_Click()
-    Call moldDict.GetDict("moldDB")
+    Call moldDict.GetDict("å¯¹ç…§è¡¨")
 
-    ' »ñÈ¡µ±Ç°sheetÃû
-    Dim curSheetName As String
-    curSheetName = ActiveSheet.Name
+    Dim moldHeadSheet As Worksheet : set moldHeadSheet = Sheets(2)
 
-    'Ñ¡ÔñÎÄ¼şÏÂÔØÂ·¾¶£¬ÉèÖÃÎÄ¼şÃû£¬ÎÄ¼şÀàĞÍ
-    Dim csvSavepath As Variant
-    Dim fileName As String
-    Rem fileName = Format(Now(), "_yymmddhhmmss")  ' ·ÀÖ¹ÎÄ¼ş¸²¸Ç£¬¹Ê´øÉÏµ±Ç°Ê±¼ä´Á
-    fileName = Range("A4").Value ' A4µ¥Ôª¸ñ¹Ì¶¨ÎªÄ£¾ßÃû
-    csvSavepath = Application.GetSaveAsFilename(InitialFileName:=fileName, FileFilter:="(*.csv),*.csv")
+    Dim fileName As String : fileName = moldHeadSheet.Range("A4")
+    Dim csvSavepath As Variant : csvSavepath = Application.GetSaveAsFilename(InitialFileName:=fileName, FileFilter:="(*.csv),*.csv")
 
-    ' fileExplorer°´ÏÂÈ¡ÏûµÄ»°£¬¾Í¿ÉÒÔÌáÇ°½áÊø
     If VarType(csvSavepath) = vbBoolean Then
         Exit Sub
     End If
 
-    'FSO¶ÔÏóÒıÓÃµÄºóÆÚ°ó¶¨
     Dim Fs As Object
     Set Fs = CreateObject("Scripting.FileSystemObject")
 
     On Error GoTo Err_FileOpen
-        '´´½¨Ò»¸öÎÄ±¾ÎÄ¼ş
         Dim exportFile As Object
         Set exportFile = Fs.createtextfile(csvSavepath)
-
-        Dim idRowx As Integer
-        idRowx = 0 ' DataIDËùÔÚĞĞ
-
+        Dim idRowx As Integer : idRowx = 0
         Dim parseRowx As Integer, parseColx As Integer, emptyRows As Integer, maxRows As Integer, maxCols As Integer
-        emptyRows = 2 ' Í·Á½ĞĞÊÇ·Å°´Å¥µÄ£¬ÊôÓÚ¶àÓàĞĞ£¬¶ÁÈ¡ÏÖsheetµÄµ¥Ôª¸ñÊ±ĞèÒª¶àÁ½ĞĞ
-        maxRows = ActiveSheet.UsedRange.Rows.Count + emptyRows
-        maxCols = ActiveSheet.UsedRange.Columns.Count
+        maxRows = 0 ' vaild cells rows, there has 2 empty rows, so need add 2
+        maxCols = 5 ' now, 5 colx is enough
 
-        ' Ğ´ÈëÎÄ¼şÄÚÈİ
-        Dim line As String, cellValue As String
-        ' ½âÎöºó£¬µ±Ç°sheetµÄÇ°Ãæ2ĞĞÊÇ¿ÕĞĞ£¬¹Ê´ÓµÚÈıĞĞ¿ªÊ¼
-        For parseRowx = 3 To maxRows
-            line = ""
-            For parseColx = 1 To maxCols
-                cellValue = Cells(parseRowx, parseColx).Text ' Text »ñÈ¡µ¥Ôª¸ñÊµ¼ÊÏÔÊ¾µÄÖµ
-                ' µÚÒ»ÁĞ£¬ÔòÖ±½ÓÈ¡µ¥Ôª¸ñµÄÖµ
-                If parseColx = 1 Then
-                    line = cellValue
-                ' ÆäËûÁĞ£¬ÔòÖ±½Ó´øÉÏÏÈÇ°µÄÊı¾İ£¬²¢ÒÔ¶ººÅ×÷ÎªcsvÎÄ¼şµÄ·Ö¸ô·û
-                Else
-                    line = line & "," & cellValue
-                End If
-            Next
-            ' ÒÔcsv¸ñÊ½£¬°´ĞĞĞ´ÈëÊı¾İ
-            exportFile.writeline (line)
+        Dim offsetRows as Integer, colx as Integer
+
+        ' PART 1 write mold head datas
+        maxRows = Application.CountA(moldHeadSheet.Range("A:A")) + 2
+        offsetRows = 3
+        call writeCsvLine(maxRows, maxCols, offsetRows, moldHeadSheet, exportFile)
+
+        ' PART 2 write DataID rows Target
+        exportFile.writeline ("DataID,DataValue,,,")
+
+        ' PART 3 write each group sheets datas
+        Dim shtKey as Variant
+        offsetRows = 2
+        For Each shtKey in g_sheetDict
+            Dim expSheet as Worksheet : set expSheet = Sheets(shtKey)
+            maxRows = Application.CountA(expSheet.Range("A:A"))
+            call writeCsvLine(maxRows, maxCols, offsetRows, expSheet, exportFile)
         Next
 
-        ' ¹Ø±ÕËùÓĞÎÄ¼şºÍfilesystem object
         exportFile.Close
         Set csvSavepath = Nothing
         Set Fs = Nothing
 
         MsgBox "Export Success!"
     Exit Sub
-    ' ÎÄ¼şÒÑ´ò¿ªµÄ´íÎóÌáÊ¾
+
 Err_FileOpen:
     Dim msg As String, style As String, title As String
-    msg = "²Ù×÷ÎŞĞ§£¡" & Chr(10) & "Çë¹Ø±ÕÈçÏÂÎÄ¼şºó£¬ÔÙÊ¹ÓÃ´Ë¹¦ÄÜ" & Chr(10) & csvSavepath & Chr(10)
+    msg = "Failedï¼" & Chr(10) & "please close those file:" & Chr(10) & csvSavepath & Chr(10)
     style = 16 ' vbCritical
     title = "#Muc " & Err.Description
 
     Call MsgBox(msg, style, title)
 End Sub
-
-

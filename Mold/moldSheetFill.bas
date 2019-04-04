@@ -22,7 +22,8 @@ Function ParseCsvAndFillCell(resCsv As Variant)
 
     ' END
     Application.ScreenUpdating = True  ' Restore
-    ' MsgBox "Success！"
+
+    MsgBox "Success！"
 
 End Function
 ' TODO
@@ -58,9 +59,9 @@ Sub SetSheetCells(resCsv As Variant)
         DataID = aCsvRowData(0) : fillColx = 0 :
         ' the top 3 lines's content is MoldHeader, 4th lines is unValid, others are [ DataID, DataValue, CN, EN ]
         If nCsvCurRowx > 4 Then
+            Dim fillSheet As Worksheet, fillRowx as Integer
             ' 仅对有分组信息的资料进行呈现
             If g_groupDict.exists(DataID) Then
-                Dim fillSheet As Worksheet, fillRowx as Integer
                 group = g_groupDict(DataID)
                 Set fillSheet = Sheets(group)
                 ' fillRowx = fillSheet.Range("A65536").End(xlUp).Row + 1
@@ -126,7 +127,12 @@ Sub SetSheetCells(resCsv As Variant)
                 Next
             End if
         Else
-            Debug.print ""
+            Set fillSheet = Sheets(2)
+            if nCsvCurRowx = 1 Then ' MoldName, SaveDate, Materials, Colour, MoldNum
+                fillSheet.Range("A3").Resize(1, UBound(aCsvRowData) + 1) = aCsvRowData
+            Elseif nCsvCurRowx = 2 Then ' 9, 2019/3/4-16:17:43, 1, 2, 3
+                fillSheet.Range("A4").Resize(1, UBound(aCsvRowData) + 1) = aCsvRowData
+            End if
         End if
 
         nCsvCurRowx = nCsvCurRowx + 1
@@ -135,15 +141,15 @@ Sub SetSheetCells(resCsv As Variant)
 End Sub
 
 Sub CreateSheets(sheetsDict As Object)
-    Dim HeadSheet As Worksheet
-    Set HeadSheet = Sheets(2)
+    Dim moldHeadSheet As Worksheet
+    Set moldHeadSheet = Sheets(2)
 
     Call DelGroupSheets
     Dim aKeys As Variant, nInx As Integer
     aKeys = sheetsDict.keys
 
     For nInx = 0 To UBound(aKeys)
-        Sheets.Add After:=HeadSheet
+        Sheets.Add After:=moldHeadSheet
         ActiveSheet.Name = aKeys(nInx)
         Dim aTitle as Variant : aTitle = Array("DataID", "DataValue", "中文翻译", "English")
         ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
