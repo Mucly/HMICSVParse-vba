@@ -18,6 +18,8 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     ' PART 3
     Call SetSheetCells(resCsv)
 
+    Call FixSheetSize(g_sheetDict)
+
     ' END
     Application.ScreenUpdating = True  ' Restore
     ' MsgBox "Success！"
@@ -100,12 +102,13 @@ Sub SetSheetCells(resCsv As Variant)
                     ElseIf fillColx = cnColx Then
                         If g_cnDict.exists(DataID) Then
                             cellValue = g_cnDict(DataID)
-                            Debug.print "DataID= ", DataID, "CN= ", cellValue
+                            ' Debug.print "group=", group, "   DataID=", DataID, " CN=", cellValue
                         End If
                     ' this colx need get en trans
                     ElseIf fillColx = enColx Then
                         If g_enDict.exists(DataID) Then
                             cellValue = g_enDict(DataID)
+                            ' Debug.print "group=", group, "   DataID=", DataID, " EN=", cellValue
                         End If
                     ' default colx
                     Else
@@ -114,9 +117,10 @@ Sub SetSheetCells(resCsv As Variant)
 
                     If cellValue <> "" Then
                         ' 填充当前sheet的单元格（按行列号）
-                        With Cells(fillRowx, fillColx)
-                                .NumberFormat = fmt ' 文本格式
-                                .FormulaR1C1 = cellValue
+
+                        With fillSheet.Cells(fillRowx, fillColx)
+                            .NumberFormat = fmt ' 文本格式
+                            .FormulaR1C1 = cellValue
                         End With
                     End If
                 Next
@@ -143,6 +147,15 @@ Sub CreateSheets(sheetsDict As Object)
         ActiveSheet.Name = aKeys(nInx)
         Dim aTitle as Variant : aTitle = Array("DataID", "DataValue", "中文翻译", "English")
         ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
+    Next
+End Sub
+
+Sub FixSheetSize(sheetsDict As Object)
+    Dim aKeys As Variant, nInx As Integer
+    aKeys = sheetsDict.keys
+    Dim sheetOffset as Integer : sheetOffset = 2 + 1 ' Sheets(inx_start_from_1)
+    For nInx = 0 To UBound(aKeys)
+        Sheets(nInx + sheetOffset).Range("A:E").Columns.AutoFit
     Next
 End Sub
 
