@@ -1,48 +1,50 @@
 Option Explicit
-Public g_id2GroupDict As Object ' ×ÊÁÏ·Ö×éÐÅÏ¢ { dataID:'Ä£¾ß' }
-Public g_datasDict As Object ' Ìî³äÊý¾Ý·Ö×éÐÅÏ¢ { 'sheetÃû×Ö£¨ÕâÀïÊÇ·Ö×é£©' : ¸ÃsheetÐÐÁÐÊý¾Ý×é³ÉµÄµ¥Ôª¸ñ }
-Public g_groupDict as Object ' ·Ö×éÐÅÏ¢
-' * »ñÈ¡×Öµä  k=DataID£¬v=translated content
-' @Parameter  DB - string - Ä¿±êDB sheetµÄÃû×Ö
-Function GetDict(DB As String)
-    ' PART 1 ´´½¨DB worksheet¶ÔÏó
-    Dim DBWorkSheet As Worksheet
-    Set DBWorkSheet = Worksheets(DB)
+Public g_id2GroupDict As Object ' { dataID:'mold' }
+Public g_dataDict As Object '  { 'groupName' : a2D }
+Public g_groupDict as Object ' { 'groupName' : groupName }
 
-    ' PART 2 ´´½¨¶à¹úÓïÑÔ×Öµä
+' * GetDict  k=DataIDï¼Œv=translated content
+Function GetDict(DB As String)
+    ' PART 1 init DBSheet
+    Dim DBSheet As Worksheet
+    Set DBSheet = Worksheets(DB)
+
+    ' PART 2 Init Dict
     Set g_id2GroupDict = CreateObject("Scripting.Dictionary")
-    Set g_datasDict = CreateObject("Scripting.Dictionary")
+    Set g_dataDict = CreateObject("Scripting.Dictionary")
     Set g_groupDict = CreateObject("Scripting.Dictionary")
 
-    ' PART 3 ±éÀúDB worksheet£¬²¢½¨Á¢×ÖµäÓ³Éä¹ØÏµ
-    Const idColx  As Integer = 1 ' µÚÒ»ÁÐ£ºDataID£¨¹Ì¶¨£©£¬×¢£º¶ÔÓ¦µ±Ç°DB sheetµÄÁÐºÅ
+    ' PART 3 Travel DB worksheet And Set Dict
+    Const idColx  As Integer = 1
     Const groupColx As Integer = 5
 
     Dim DataID As String, group As String, prec As String,inx As Integer, nDBRows as Integer
-    nDBRows = DBWorkSheet.UsedRange.Rows.Count
+    nDBRows = DBSheet.UsedRange.Rows.Count
 
     For inx = 2 To nDBRows
-        DataID = DBWorkSheet.Cells(inx, idColx)
+        DataID = DBSheet.Cells(inx, idColx)
         If DataID <> "" Then
-            group = DBWorkSheet.Cells(inx, groupColx)
+            group = DBSheet.Cells(inx, groupColx)
 
             if group <> "" Then
-                ' ´´½¨·Ö×é¶ÔÓ¦¹ØÏµ×Öµä{ k=DataID, v=group }
+                ' create g_id2GroupDict =  { k=DataID, v=group , ...  }
                 g_id2GroupDict(DataID) = group
 
-                ' ´´½¨·Ö×é×Öµä { k=group, v=group }
+                ' create g_groupDict = { k=group, v=group , ... }
                 if Not g_groupDict.exists(group) Then
                     g_groupDict(group) = group
                 End If
 
-                ' ´´½¨Ìî³äÊý¾Ý×Öµä { k=group, v=a2D }
-                If Not g_datasDict.exists(group) Then
+                ' create dataDict { k=group, v=a2D }
+                If Not g_dataDict.exists(group) Then
                     Dim a2D(0 To 1001, 0 To 8) As Variant
-                    g_datasDict(group) = a2D
+                    g_dataDict(group) = a2D
                 End If
             End if
         End If
     Next
+
+    ' MoldHead group
+    Dim a2DHead(3, 8) As String
+    g_dataDict("æŒ‰é’®+æ¨¡å…·å¤´") = a2DHead
 End Function
-
-

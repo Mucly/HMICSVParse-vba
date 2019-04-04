@@ -1,101 +1,110 @@
 Option Explicit
-' * Ã¿´ÎÔØÈëÇ°£¬Çå¿ÕËùÓĞµ¥Ôª¸ñ ---
+' clear current sheet's cells
 Function ClearCurSheet()
     Cells.Select
     Selection.ClearContents
 End Function
-' * ¶ÁÈ¡csvÎÄ¼ş²¢¶ÔÕÕ×Öµä·­Òëºó£¬Ìî³äÖÁµ±Ç°sheet
-' @Parameter  resCsv        - Ô´csvÎÄ¼ş
-'                      offsetRowx - Ìî³äĞĞÆ«ÒÆÎ»ÖÃ
-' @Remind sheetÀïÃæµÄĞĞÁĞ´Ó1¿ªÊ¼
+
 Function ParseCsvAndFillCell(resCsv As Variant)
-    ' START ½ûÓÃ×Ô¶¯Ë¢ĞÂ
+    ' START
     Application.ScreenUpdating = False
 
-    ' PART 1 Çå¿Õµ±Ç°sheetµÄËùÓĞµ¥Ôª¸ñÄÚÈİºó
-    call ClearCurSheet
+    ' PART 1
+    Call ClearCurSheet
 
-    ' PART 2 ÉèÖÃÊı¾İ¶ÔÏó
-    Const precParseColx As Integer = 2 ' µÚ¶şÁĞ£º¾«¶È£¨¹Ì¶¨£©£¬×¢£º¶ÔÓ¦µ±Ç°Parsed sheetµÄÁĞºÅ
-    Const cnParseColx As Integer = 3 ' µÚÈıÁĞ£ºchinese·­Òë£¨¹Ì¶¨£©
-    Const enParseColx As Integer = 4 ' µÚËÄÁĞ£ºenglish£¨¹Ì¶¨£©
+    ' PART 2
+    call CreateGroupSheets(g_groupDict)
 
-    Dim idColx As Integer
-    idColx = 0
+    ' PART 3
+    Call SetDataDict(resCsv, g_dataDict)
 
-    call CreateSheets(g_groupDict)
+    ' END
+    Application.ScreenUpdating = True  ' Restore
+    ' MsgBox "Successï¼"
 
-    ' PART 3 ÖğĞĞ¶ÁÈ¡csvÎÄ¼ş
+End Function
+' TODO
+Function GetArrayVaildCnt(a2D As Variant)
+    Dim rowx As Integer, colx As Integer, nFillRowx As Integer
+    nFillRowx = 0
+    colx = 0
+    For rowx = 0 To UBound(a2D)
+        If a2D(rowx, 0) <> "" Then
+            nFillRowx = nFillRowx + 1
+        End If
+    Next
+    GetArrayVaildCnt = nFillRowx
+End Function
+
+Sub SetDataDict(resCsv As Variant, DataDict As Object)
+    ' PART 3 Read Csv By Line, Then Set Each Group's a2D in DataDict
     Dim sCurLine As String
     Dim aCsvRowData As Variant
-    Dim nCsvCurRowx as Integer
-    Open resCsv For Input As #1 ' ´ò¿ªcsvÎÄ¼ş£¬file number #1
-    nCsvCurRowx = 0
-    Do While Not EOF(1) ' ÖğĞĞÑ­»· #1ÎÄ¼ş
-        Line Input #1, sCurLine  ' sCurLine = csvµ±Ç°ĞĞÄÚÈİ£¨MoldName,SaveDate,Materials,Colour,MoldNum£©£¬×¢£º×Ö·û´®¸ñÊ½
-        aCsvRowData = Split(sCurLine, ",") ' °´ÕÕ¶ººÅ£¬½«µ±Ç°ĞĞÄÚÈİÍ¨¹ıSplit±äÎªÊı×é
+    Dim nCsvCurRowx As Integer
+    Open resCsv For Input As #1 ' csv.fileNumber == #1
+    nCsvCurRowx = 1
+    Do While Not EOF(1)
+        Line Input #1, sCurLine
+        aCsvRowData = Split(sCurLine, ",")
 
-        if nCsvCurRowx > 3 Then
-            Dim id as String
-            id = aCsvRowData(0)
-        End If
+        Dim colx As Integer, fillColx as Integer, cellValue As String, DataID As String, group As String
+        DataID = aCsvRowData(0) : fillColx = 0 :
 
+        if nCsvCurRowx < 4 Then
+            Debug.print ""
+        Else
+            If g_id2GroupDict.exists(DataID) Then
+                Dim fillSheet As Worksheet, fillRowx as Integer
+                group = g_id2GroupDict(DataID)
+                Set fillSheet = Sheets(group)
+                ' fillRowx = fillSheet.Range("A65536").End(xlUp).Row + 1
+                fillRowx = Application.CountA(fillSheet.Range("A:A")) + 1
+
+                For colx = 0 To UBound(aCsvRowData)
+
+                    fillColx = colx + 1
+                    cellValue = aCsvRowData(colx)
+                    ' the top two lines's content is MoldHeader
+                    Debug.print group, fillRowx, fillColx, cellValue
+                    fillSheet.Cells(fillRowx, fillColx) = cellValue
+                Next
+            End if
+        End if
         nCsvCurRowx = nCsvCurRowx + 1
     Loop
     Close #1
+End Sub
 
-    ' END
-    Application.ScreenUpdating = True  ' »¹Ô­ÆÁÄ»Ë¢ĞÂ
-    ' MsgBox "½âÎö³É¹¦£¡" ' µ¯³ö³É¹¦ÌáÊ¾
-
-End Function
-
-
-Sub CreateSheets(groupDict As Object)
+Sub CreateGroupSheets(groupDict As Object)
     Dim HeadSheet As Worksheet
     Set HeadSheet = Sheets(2)
 
-    ' Dim wsh As Worksheet
-    ' Set d = CreateObject("Scripting.Dictionary")
-    ' For Each wsh In Worksheets
-    '    d(wsh.Name) = ""
-    ' Next
-
-    ' If d.exists(group) Then
-    '     Application.DisplayAlerts = False
-    '     Sheets(group).Delete
-    '     Application.DisplayAlerts = True
-    ' Else
-    '     Sheets.Add After:=DBSheet
-    '     ActiveSheet.Name = group
-    ' End If
-    ' Set d = Nothing
-
-    Call DelGroupSheets()
-    Dim aKeys as Variant, nInx as Integer
+    Call DelGroupSheets
+    Dim aKeys As Variant, nInx As Integer
     aKeys = groupDict.keys
 
     For nInx = 0 To UBound(aKeys)
         Sheets.Add After:=HeadSheet
         ActiveSheet.Name = aKeys(nInx)
+        Dim aTitle as Variant : aTitle = Array("DataID", "DataValue", "ä¸­æ–‡ç¿»è¯‘", "English")
+        ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
     Next
-
 End Sub
 
-' É¾³ı·Ö×ésheet
 Sub DelGroupSheets()
     Application.DisplayAlerts = False
-    Dim nInx as Integer
-    ' sheet´Ó1¿ªÊ¼¼ÆÊı
-    for nInx = 1 To Sheets.Count
-        if nInx > 2 Then
+    Dim nInx As Integer
+    ' sheet's index start from 1
+    For nInx = 1 To Sheets.Count
+        If nInx > 2 Then
+            ' the top two sheets is standard, delete others sheets only
             Worksheets(Sheets(3)).Delete
         End If
     Next
     Application.DisplayAlerts = True
 End Sub
 
-' sheet±£»¤£¨×¢£ºÎŞ·¨²åÈëÉ¾³ıĞĞ£© + Ëø¶¨Ä£¾ßÍ·
+' sheet Protect
 Sub LockMoldHeader(bLocked)
     If (bLocked) Then
         Cells.Select
