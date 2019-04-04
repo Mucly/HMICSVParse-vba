@@ -1,7 +1,9 @@
 Option Explicit
-Public g_id2GroupDict As Object ' { dataID:'mold' }
-Public g_dataDict As Object '  { 'groupName' : a2D }
-Public g_groupDict as Object ' { 'groupName' : groupName }
+Public g_groupDict As Object
+Public g_precDict As Object
+Public g_cnDict as Object
+Public g_enDict as Object
+Public g_sheetDict as Object
 
 ' * GetDict  k=DataID，v=translated content
 Function GetDict(DB As String)
@@ -10,41 +12,40 @@ Function GetDict(DB As String)
     Set DBSheet = Worksheets(DB)
 
     ' PART 2 Init Dict
-    Set g_id2GroupDict = CreateObject("Scripting.Dictionary")
-    Set g_dataDict = CreateObject("Scripting.Dictionary")
+    Set g_precDict = CreateObject("Scripting.Dictionary")
+    Set g_cnDict = CreateObject("Scripting.Dictionary")
+    Set g_enDict = CreateObject("Scripting.Dictionary")
     Set g_groupDict = CreateObject("Scripting.Dictionary")
+    Set g_sheetDict = CreateObject("Scripting.Dictionary")
 
     ' PART 3 Travel DB worksheet And Set Dict
     Const idColx  As Integer = 1
-    Const groupColx As Integer = 5
-
-    Dim DataID As String, group As String, prec As String,inx As Integer, nDBRows as Integer
+    Const precColx As Integer = 2
+    Const cnColx As Integer = 3
+    Const enColx As Integer = 4
+    Const sheetColx As Integer = 5
+    Dim DataID As String, group As String, prec As String, cn As String, en As String, DBRowx As Integer, nDBRows as Integer
     nDBRows = DBSheet.UsedRange.Rows.Count
 
-    For inx = 2 To nDBRows
-        DataID = DBSheet.Cells(inx, idColx)
+    For DBRowx = 2 To nDBRows
+        DataID = DBSheet.Cells(DBRowx, idColx)
         If DataID <> "" Then
-            group = DBSheet.Cells(inx, groupColx)
+            prec = DBSheet.Cells(DBRowx, precColx)
+            cn = DBSheet.Cells(DBRowx, cnColx)
+            en = DBSheet.Cells(DBRowx, enColx)
+            group = DBSheet.Cells(DBRowx, sheetColx)
 
             if group <> "" Then
-                ' create g_id2GroupDict =  { k=DataID, v=group , ...  }
-                g_id2GroupDict(DataID) = group
+                g_precDict(DataID) = prec
+                g_cnDict(DataID) = cn
+                g_enDict(DataID) = en
+                g_groupDict(DataID) = group
 
-                ' create g_groupDict = { k=group, v=group , ... }
-                if Not g_groupDict.exists(group) Then
-                    g_groupDict(group) = group
+                if Not g_sheetDict.exists(group) Then
+                    g_sheetDict(group) = group
                 End If
 
-                ' create dataDict { k=group, v=a2D }
-                If Not g_dataDict.exists(group) Then
-                    Dim a2D(0 To 1001, 0 To 8) As Variant
-                    g_dataDict(group) = a2D
-                End If
             End if
         End If
     Next
-
-    ' MoldHead group
-    Dim a2DHead(3, 8) As String
-    g_dataDict("按钮+模具头") = a2DHead
 End Function

@@ -13,10 +13,10 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     Call ClearCurSheet
 
     ' PART 2
-    call CreateGroupSheets(g_groupDict)
+    call CreateSheets(g_sheetDict)
 
     ' PART 3
-    Call SetDataDict(resCsv, g_dataDict)
+    Call SetSheetCells(resCsv)
 
     ' END
     Application.ScreenUpdating = True  ' Restore
@@ -36,52 +36,107 @@ Function GetArrayVaildCnt(a2D As Variant)
     GetArrayVaildCnt = nFillRowx
 End Function
 
-Sub SetDataDict(resCsv As Variant, DataDict As Object)
+Sub SetSheetCells(resCsv As Variant)
     ' PART 3 Read Csv By Line, Then Set Each Group's a2D in DataDict
     Dim sCurLine As String
     Dim aCsvRowData As Variant
     Dim nCsvCurRowx As Integer
     Open resCsv For Input As #1 ' csv.fileNumber == #1
     nCsvCurRowx = 1
+
+    Const valueColx as Integer = 2
+    Const cnColx as Integer = 3
+    Const enColx as Integer = 4
+
     Do While Not EOF(1)
         Line Input #1, sCurLine
         aCsvRowData = Split(sCurLine, ",")
 
         Dim colx As Integer, fillColx as Integer, cellValue As String, DataID As String, group As String
         DataID = aCsvRowData(0) : fillColx = 0 :
-
-        if nCsvCurRowx < 4 Then
-            Debug.print ""
-        Else
-            If g_id2GroupDict.exists(DataID) Then
+        ' the top 3 lines's content is MoldHeader, 4th lines is unValid, others are [ DataID, DataValue, CN, EN ]
+        If nCsvCurRowx > 4 Then
+            ' 仅对有分组信息的资料进行呈现
+            If g_groupDict.exists(DataID) Then
                 Dim fillSheet As Worksheet, fillRowx as Integer
-                group = g_id2GroupDict(DataID)
+                group = g_groupDict(DataID)
                 Set fillSheet = Sheets(group)
                 ' fillRowx = fillSheet.Range("A65536").End(xlUp).Row + 1
                 fillRowx = Application.CountA(fillSheet.Range("A:A")) + 1
 
+                ' --- 遍历每行数据
                 For colx = 0 To UBound(aCsvRowData)
-
-                    fillColx = colx + 1
                     cellValue = aCsvRowData(colx)
-                    ' the top two lines's content is MoldHeader
-                    Debug.print group, fillRowx, fillColx, cellValue
-                    fillSheet.Cells(fillRowx, fillColx) = cellValue
+                    fillColx = colx + 1
+                    ' this colx need cell prec-format
+                    If fillColx = valueColx then
+                        Dim prec As Integer, head As String, tail As String, fmt As String
+                        If g_precDict.exists(DataID) Then
+                            prec = g_precDict(DataID)
+                        Else
+                            prec = 0 : fmt = "General"
+                        End If
+
+                        cellValue = Replace(cellValue, ".", "")
+                        Dim maxBitWeight As Integer, digit As Integer
+                        digit = Len(cellValue) ' 源数字的位数
+                        maxBitWeight = Application.WorksheetFunction.Power(10, prec)
+                        If prec > digit Then
+                            head = "0"
+                            tail = String(prec, "0")
+                            fmt = head + "." + tail
+                        ElseIf prec < digit Then
+                            head = String(digit - prec, "0")
+                            tail = String(prec, "0")
+                            head = "0"
+                            fmt = head + "." + tail
+                        Else
+                            head = "0"
+                            tail = String(prec, "0")
+                            fmt = head + "." + tail
+                        End If
+                        cellValue = Format(cellValue / maxBitWeight, fmt)
+                    ' this colx need get cn trans
+                    ElseIf fillColx = cnColx Then
+                        If g_cnDict.exists(DataID) Then
+                            cellValue = g_cnDict(DataID)
+                            Debug.print "DataID= ", DataID, "CN= ", cellValue
+                        End If
+                    ' this colx need get en trans
+                    ElseIf fillColx = enColx Then
+                        If g_enDict.exists(DataID) Then
+                            cellValue = g_enDict(DataID)
+                        End If
+                    ' default colx
+                    Else
+                        cellValue = cellValue
+                    End if
+
+                    If cellValue <> "" Then
+                        ' 填充当前sheet的单元格（按行列号）
+                        With Cells(fillRowx, fillColx)
+                                .NumberFormat = fmt ' 文本格式
+                                .FormulaR1C1 = cellValue
+                        End With
+                    End If
                 Next
             End if
+        Else
+            Debug.print ""
         End if
+
         nCsvCurRowx = nCsvCurRowx + 1
     Loop
     Close #1
 End Sub
 
-Sub CreateGroupSheets(groupDict As Object)
+Sub CreateSheets(sheetsDict As Object)
     Dim HeadSheet As Worksheet
     Set HeadSheet = Sheets(2)
 
     Call DelGroupSheets
     Dim aKeys As Variant, nInx As Integer
-    aKeys = groupDict.keys
+    aKeys = sheetsDict.keys
 
     For nInx = 0 To UBound(aKeys)
         Sheets.Add After:=HeadSheet
