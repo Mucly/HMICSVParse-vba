@@ -18,10 +18,12 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     ' PART 3
     Call SetSheetCells(resCsv)
 
-    Call FixSheetSize(g_sheetDict)
+    Call BeautySheets(g_sheetDict)
 
     ' END
     Application.ScreenUpdating = True  ' Restore
+
+    Sheets(3).Activate
 
     MsgBox "Success！"
 
@@ -74,31 +76,32 @@ Sub SetSheetCells(resCsv As Variant)
                     ' this colx need cell prec-format
                     If fillColx = valueColx then
                         Dim prec As Integer, head As String, tail As String, fmt As String
+                        fmt = "General"
                         If g_precDict.exists(DataID) Then
                             prec = g_precDict(DataID)
-                        Else
-                            prec = 0 : fmt = "General"
-                        End If
 
-                        cellValue = Replace(cellValue, ".", "")
-                        Dim maxBitWeight As Integer, digit As Integer
-                        digit = Len(cellValue) ' 源数字的位数
-                        maxBitWeight = Application.WorksheetFunction.Power(10, prec)
-                        If prec > digit Then
-                            head = "0"
-                            tail = String(prec, "0")
-                            fmt = head + "." + tail
-                        ElseIf prec < digit Then
-                            head = String(digit - prec, "0")
-                            tail = String(prec, "0")
-                            head = "0"
-                            fmt = head + "." + tail
-                        Else
-                            head = "0"
-                            tail = String(prec, "0")
-                            fmt = head + "." + tail
+                            if prec <> 0 then
+                                cellValue = Replace(cellValue, ".", "")
+                                Dim maxBitWeight As Variant, digit As Integer
+                                digit = Len(cellValue) ' 源数字的位数
+                                maxBitWeight = Application.WorksheetFunction.Power(10, prec)
+                                If prec > digit Then
+                                    head = "0"
+                                    tail = String(prec, "0")
+                                    fmt = head + "." + tail
+                                ElseIf prec < digit Then
+                                    head = String(digit - prec, "0")
+                                    tail = String(prec, "0")
+                                    head = "0"
+                                    fmt = head + "." + tail
+                                Else
+                                    head = "0"
+                                    tail = String(prec, "0")
+                                    fmt = head + "." + tail
+                                End If
+                                cellValue = Format(cellValue / maxBitWeight, fmt)
+                            End if
                         End If
-                        cellValue = Format(cellValue / maxBitWeight, fmt)
                     ' this colx need get cn trans
                     ElseIf fillColx = cnColx Then
                         If g_cnDict.exists(DataID) Then
@@ -151,17 +154,24 @@ Sub CreateSheets(sheetsDict As Object)
     For nInx = 0 To UBound(aKeys)
         Sheets.Add After:=moldHeadSheet
         ActiveSheet.Name = aKeys(nInx)
-        Dim aTitle as Variant : aTitle = Array("DataID", "DataValue", "中文翻译", "English")
+        Dim aTitle as Variant : aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
         ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
     Next
 End Sub
 
-Sub FixSheetSize(sheetsDict As Object)
+Sub BeautySheets(sheetsDict As Object)
     Dim aKeys As Variant, nInx As Integer
     aKeys = sheetsDict.keys
     Dim sheetOffset as Integer : sheetOffset = 2 + 1 ' Sheets(inx_start_from_1)
     For nInx = 0 To UBound(aKeys)
-        Sheets(nInx + sheetOffset).Range("A:E").Columns.AutoFit
+        Dim newSheet as Worksheet : set newSheet = Sheets(nInx + sheetOffset)
+
+        With newSheet.Cells
+            .Columns.AutoFit
+            .HorizontalAlignment = xlHAlignCenter
+            .Font.Name = "微软雅黑"
+            .Font.Size = 12
+        End With
     Next
 End Sub
 

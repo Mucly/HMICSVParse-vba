@@ -66,7 +66,7 @@ Private Sub CommandButton2_Click()
         call writeCsvLine(maxRows, maxCols, offsetRows, moldHeadSheet, exportFile)
 
         ' PART 2 write DataID rows Target
-        exportFile.writeline ("DataID,DataValue,,,")
+        exportFile.writeline ("DataID,DataValue,Description#1,Description#2,")
 
         ' PART 3 write each group sheets datas
         Dim shtKey as Variant

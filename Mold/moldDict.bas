@@ -24,8 +24,8 @@ Function GetDict(DB As String)
     Const cnColx As Integer = 3
     Const enColx As Integer = 4
     Const sheetColx As Integer = 5
-    Dim DataID As String, group As String, prec As String, cn As String, en As String, DBRowx As Integer, nDBRows as Integer
-    nDBRows = DBSheet.UsedRange.Rows.Count
+    Dim DataID As String, group As String, prec As String, cn As String, en As String, DBRowx As Integer, nDBRows as Variant
+    nDBRows = Application.CountA(DBSheet.Range("A:A")) + 1
 
     For DBRowx = 2 To nDBRows
         DataID = DBSheet.Cells(DBRowx, idColx)
