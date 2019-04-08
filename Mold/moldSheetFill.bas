@@ -41,7 +41,7 @@ Function GetArrayVaildCnt(a2D As Variant)
 End Function
 
 Sub FillSheetCells(resCsv As Variant)
-    ' PART 1 Read Csv By Line, Then Set Each Group's a2D in DataDict
+    ' PART 1 Read Csv By Line, Then format all cells in its sheets
     Dim sCurLine As String
     Dim aCsvRowData As Variant
     Dim nCsvCurRowx As Integer
@@ -62,7 +62,7 @@ Sub FillSheetCells(resCsv As Variant)
         ' the top 3 lines's content is MoldHeader, 4th lines is unValid, others likes [ "0x400", 123, "我是中文翻译", "English Translation" ]
         If nCsvCurRowx > 4 Then
             Dim fillSheet As Worksheet, fillRowx as Integer
-            ' 仅对有分组信息的资料进行呈现
+            ' create vaild groups only
             If g_groupDict.exists(DataID) Then
                 group = g_groupDict(DataID)
                 Set fillSheet = Sheets(group)
@@ -86,14 +86,13 @@ Sub FillSheetCells(resCsv As Variant)
                             ' prec <> 0 Float Only
                             if prec <> 0 then
                                 cellValue = Replace(cellValue, ".", "")
-                                digit = Len(cellValue) ' 源数字的位数
+                                digit = Len(cellValue)
                                 maxBitWeight = Application.WorksheetFunction.Power(10, prec)
                                 If prec > digit Then
                                     head = "0"
                                     tail = String(prec, "0")
                                     fmt = head + "." + tail
                                 ElseIf prec < digit Then
-                                    ' head = String(digit - prec, "0") ' mark，给0就行了，不需要做限制
                                     head = "0"
                                     tail = String(prec, "0")
                                     fmt = head + "." + tail
@@ -127,10 +126,9 @@ Sub FillSheetCells(resCsv As Variant)
                     End if
 
                     If cellValue <> "" Then
-                        ' 填充当前sheet的单元格（按行列号）
-
+                        ' fill each cell
                         With fillSheet.Cells(fillRowx, fillColx)
-                            .NumberFormat = fmt ' 文本格式
+                            .NumberFormat = fmt
                             .FormulaR1C1 = cellValue
                         End With
                     End If
