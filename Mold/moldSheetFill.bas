@@ -93,7 +93,8 @@ Sub FillSheetCells(resCsv As Variant)
                                     tail = String(prec, "0")
                                     fmt = head + "." + tail
                                 ElseIf prec < digit Then
-                                    head = String(digit - prec, "0")
+                                    ' head = String(digit - prec, "0") ' mark，给0就行了，不需要做限制
+                                    head = "0"
                                     tail = String(prec, "0")
                                     fmt = head + "." + tail
                                 Else
