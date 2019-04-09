@@ -7,6 +7,7 @@ Function GetTransDict(DB As String)
 
     Set g_meanDict = CreateObject("Scripting.Dictionary")
     Set g_precDict = CreateObject("Scripting.Dictionary")
+    Set g_colxAlphaDict = CreateObject("Scripting.Dictionary")
 
     Const tagColx As Integer = 1
     Const meanColx As Integer = 2
@@ -27,9 +28,18 @@ Function GetTransDict(DB As String)
             g_meanDict(tag) = mean
 
             ' tag's prec, if prec not exists, pass
-            g_precDict(tag) = prec
+            If rowx > 3 Then
+                g_precDict(tag) = prec
+            End If
 
         End If
     Next
-End Function
 
+    ' { 1 : A, 2 : B, 3 : C, ... }
+    Dim myChar As String
+    Dim inx As Integer
+    For inx = 1 To 27
+        g_colxAlphaDict(inx) = chr(64 + inx)
+    Next
+
+End Function
