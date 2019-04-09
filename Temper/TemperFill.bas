@@ -166,6 +166,7 @@ Function ParseCsvAndFillCell(resCSV As Variant, fillRowx As Integer)
     Call CreateEachSegSheets
 
     ' END
+    sheets(2).Activate
     Application.ScreenUpdating = True
     MsgBox "Success!"
 
