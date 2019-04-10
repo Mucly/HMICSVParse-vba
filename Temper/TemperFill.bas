@@ -3,7 +3,7 @@ Option Explicit
 Sub ClearCurSheet()
     Cells.Select
     Selection.ClearContents
-    ' Selection.NumberFormat = "General"
+    Selection.NumberFormat = "General"
 End Sub
 
 Sub BeautySheets()
