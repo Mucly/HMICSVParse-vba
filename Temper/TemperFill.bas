@@ -30,23 +30,23 @@ End Sub
 
 Sub CreateEachSegSheets()
     ' PART 1 Del Sheets
-    Call DelEachSegSheets()
+    Call DelEachSegSheets
 
     ' PART 2 Draw Charts
     Dim aSegSheetName As Variant: aSegSheetName = g_meanDict.Items
     Dim inx As Integer
-    Dim parseSht As Worksheet: Set ParseSht = Sheets(2)
-    Dim name As Integer : name = 1
+    Dim parseSht As Worksheet: Set parseSht = Sheets(2)
+    Dim name As Integer: name = 1
     Dim maxCols  As Integer: maxCols = Application.CountA(ActiveSheet.Range("A:A")) + 2
     For inx = 2 To UBound(aSegSheetName)
-        Dim colx As Integer : colx = inx + 1
+        Dim colx As Integer: colx = inx + 1
         ' Each Chart's Title Depend On Odd Colx's Title
         If (colx Mod 2) <> 0 Then
-            Sheets.Add After := ParseSht
-            ActiveSheet.Name = "#" & name
+            Sheets.Add After:=parseSht
+            ActiveSheet.name = "#" & name
 
             Dim sTimeRange As String, sTemperRange As String, sRange As String
-            sTimeRange = "Temper!$B$3" & ":$B$" & maxCols ' Time Col， eg. "Temper!$B3:B$666"
+            sTimeRange = "Temper!$B$3" & ":$B$" & maxCols ' Time Col， eg. "Temper!$B3:B$16"
             sTemperRange = "Temper!$" & g_colxAlphaDict(colx) & "$3" & ":$" & g_colxAlphaDict(colx + 1) & "$" & maxCols ' Temper Cols， eg. Temper!$D$3:$E$6"
             sRange = sTimeRange & "," & sTemperRange
 
@@ -78,7 +78,7 @@ Function ParseCsvAndFillCell(resCSV As Variant, fillRowx As Integer)
     Dim sCurLine As String: sCurLine = ""
     Dim aRowData As Variant
     Dim head As String, tail As String, fmt As String
-    REM Dim dFormatColx As Object : Set dFormatColx = CreateObject("Scripting.Dictionary") '
+    Rem Dim dFormatColx As Object : Set dFormatColx = CreateObject("Scripting.Dictionary") '
 
     Open resCSV For Input As #66
     Do While Not EOF(66)
@@ -139,8 +139,6 @@ Function ParseCsvAndFillCell(resCSV As Variant, fillRowx As Integer)
                 End If
             End If
 
-            Cells(fillRowx, fillColx).Value = cellValue
-
             ' TODO
             ' When Precsion > 1, Open Those Code
             ' * Optimize : Gets the column number that needs precision and formats it once
@@ -153,20 +151,19 @@ Function ParseCsvAndFillCell(resCSV As Variant, fillRowx As Integer)
                     .NumberFormatLocal = fmt
                 End With
             End If
-
         Next
 
         ' Counter Accumulate
-        resCSVRowx = resCSVRowx + 1
-        fillRowx = fillRowx + 1
+    resCSVRowx = resCSVRowx + 1
+    fillRowx = fillRowx + 1
     Loop
     Close #66
 
-    Call BeautySheets
+    Rem Call BeautySheets
     Call CreateEachSegSheets
 
     ' END
-    sheets(2).Activate
+    Sheets(2).Activate
     Application.ScreenUpdating = True
     MsgBox "Success!"
 
