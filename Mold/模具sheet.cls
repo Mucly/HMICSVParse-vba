@@ -17,9 +17,9 @@ Private Sub CommandButton1_Click()
     End If
 End Sub
 
-Sub writeCsvLine(rows as Integer, cols as Integer, offset as Integer, dataSheet as Worksheet, expFile as Object)
-    Dim rowx as Integer, colx as Integer, cellValue as String
-    Dim sCurLine as String : sCurLine = ""
+Sub writeCsvLine(rows As Integer, cols As Integer, offset As Integer, dataSheet As Worksheet, expFile As Object)
+    Dim rowx As Integer, colx As Integer, cellValue As String
+    Dim sCurLine As String: sCurLine = ""
 
     For rowx = offset To rows
         For colx = 1 To cols
@@ -38,10 +38,10 @@ End Sub
 Private Sub CommandButton2_Click()
     Call moldDict.GetDict("对照表")
 
-    Dim moldHeadSheet As Worksheet : set moldHeadSheet = Sheets(2)
+    Dim moldHeadSheet As Worksheet: Set moldHeadSheet = Sheets(2)
 
-    Dim fileName As String : fileName = moldHeadSheet.Range("A4")
-    Dim csvSavepath As Variant : csvSavepath = Application.GetSaveAsFilename(InitialFileName:=fileName, FileFilter:="(*.csv),*.csv")
+    Dim fileName As String: fileName = moldHeadSheet.Range("A4")
+    Dim csvSavepath As Variant: csvSavepath = Application.GetSaveAsFilename(InitialFileName:=fileName, FileFilter:="(*.csv),*.csv")
 
     If VarType(csvSavepath) = vbBoolean Then
         Exit Sub
@@ -53,28 +53,28 @@ Private Sub CommandButton2_Click()
     On Error GoTo Err_FileOpen
         Dim exportFile As Object
         Set exportFile = Fs.createtextfile(csvSavepath)
-        Dim idRowx As Integer : idRowx = 0
+        Dim idRowx As Integer: idRowx = 0
         Dim parseRowx As Integer, parseColx As Integer, emptyRows As Integer, maxRows As Integer, maxCols As Integer
         maxRows = 0 ' vaild cells rows, there has 2 empty rows, so need add 2
         maxCols = 5 ' now, 5 colx is enough
 
-        Dim offsetRows as Integer, colx as Integer
+        Dim offsetRows As Integer, colx As Integer
 
         ' PART 1 write mold head datas
         maxRows = Application.CountA(moldHeadSheet.Range("A:A")) + 2
         offsetRows = 3
-        call writeCsvLine(maxRows, maxCols, offsetRows, moldHeadSheet, exportFile)
+        Call writeCsvLine(maxRows, maxCols, offsetRows, moldHeadSheet, exportFile)
 
         ' PART 2 write DataID rows Target
         exportFile.writeline ("DataID,DataValue,Description#1,Description#2,")
 
         ' PART 3 write each group sheets datas
-        Dim shtKey as Variant
+        Dim shtKey As Variant
         offsetRows = 2
-        For Each shtKey in g_sheetDict
-            Dim expSheet as Worksheet : set expSheet = Sheets(shtKey)
+        For Each shtKey In g_sheetDict
+            Dim expSheet As Worksheet: Set expSheet = Sheets(shtKey)
             maxRows = Application.CountA(expSheet.Range("A:A"))
-            call writeCsvLine(maxRows, maxCols, offsetRows, expSheet, exportFile)
+            Call writeCsvLine(maxRows, maxCols, offsetRows, expSheet, exportFile)
         Next
 
         exportFile.Close
@@ -91,4 +91,16 @@ Err_FileOpen:
     title = "#Muc " & Err.Description
 
     Call MsgBox(msg, style, title)
+End Sub
+
+Private Sub CopyBtn_Click()
+    ' Merge Scattered Sheets To ActiveSheet
+    Dim inx1 As Integer, x As Integer, shtCnts As Integer : shtCnts = Sheets.Count
+    For inx1 = 1 To shtCnts
+        If inx1 > 2 Then
+            x = Application.CountA(ActiveSheet.Range("A:A"))
+            Sheets(inx1).UsedRange.offset(1, 0).Copy ActiveSheet.Cells(x, 1)
+        End If
+    Next
+    MsgBox "当前工作簿下的全部工作表已经合并完毕！", vbInformation, "提示"
 End Sub
