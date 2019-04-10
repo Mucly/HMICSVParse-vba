@@ -13,7 +13,7 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     Call ClearCurSheet
 
     ' PART 2
-    call CreateSheets(g_sheetDict)
+    Call CreateSheets(g_sheetDict)
 
     ' PART 3
     Call FillSheetCells(resCsv)
@@ -48,20 +48,20 @@ Sub FillSheetCells(resCsv As Variant)
     Open resCsv For Input As #1 ' csv.fileNumber == #1
     nCsvCurRowx = 1
 
-    Const valueColx as Integer = 2
-    Const cnColx as Integer = 3
-    Const enColx as Integer = 4
+    Const valueColx As Integer = 2
+    Const cnColx As Integer = 3
+    Const enColx As Integer = 4
 
     ' PART 2 Iterate csv file and fill Cells
     Do While Not EOF(1)
         Line Input #1, sCurLine
         aCsvRowData = Split(sCurLine, ",")
 
-        Dim colx As Integer, fillColx as Integer, cellValue As String, DataID As String, group As String
-        DataID = aCsvRowData(0) : fillColx = 0 :
+        Dim colx As Integer, fillColx As Integer, cellValue As String, DataID As String, group As String
+        DataID = aCsvRowData(0): fillColx = 0:
         ' the top 3 lines's content is MoldHeader, 4th lines is unValid, others likes [ "0x400", 123, "我是中文翻译", "English Translation" ]
         If nCsvCurRowx > 4 Then
-            Dim fillSheet As Worksheet, fillRowx as Integer
+            Dim fillSheet As Worksheet, fillRowx As Integer
             ' create vaild groups only
             If g_groupDict.exists(DataID) Then
                 group = g_groupDict(DataID)
@@ -71,12 +71,12 @@ Sub FillSheetCells(resCsv As Variant)
 
                 ' --- 遍历每行数据
                 For colx = 0 To UBound(aCsvRowData)
-                    Dim fmt As String : fmt = "General"
+                    Dim fmt As String: fmt = "General"
                     cellValue = aCsvRowData(colx)
                     fillColx = colx + 1
 
                     ' this colx need cell prec-format
-                    If fillColx = valueColx then
+                    If fillColx = valueColx Then
                         Dim prec As Integer, head As String, tail As String
                         If g_precDict.exists(DataID) Then
                             prec = g_precDict(DataID)
@@ -84,7 +84,7 @@ Sub FillSheetCells(resCsv As Variant)
                             Dim maxBitWeight As Variant, digit As Integer
                             maxBitWeight = 1
                             ' prec <> 0 Float Only
-                            if prec <> 0 then
+                            If prec <> 0 Then
                                 cellValue = Replace(cellValue, ".", "")
                                 digit = Len(cellValue)
                                 maxBitWeight = Application.WorksheetFunction.Power(10, prec)
@@ -99,12 +99,12 @@ Sub FillSheetCells(resCsv As Variant)
                                 Else
                                     head = "0"
                                     tail = String(prec, "0")
-                                    fmt = head + "." +  tail
+                                    fmt = head + "." + tail
                                 End If
                             Else
                             ' prec = 0 : Positive Integer Only
                                 fmt = "0"
-                            End if
+                            End If
 
                             cellValue = Format(cellValue / maxBitWeight, fmt)
                         End If
@@ -123,7 +123,7 @@ Sub FillSheetCells(resCsv As Variant)
                     ' default colx
                     Else
                         cellValue = cellValue
-                    End if
+                    End If
 
                     If cellValue <> "" Then
                         ' fill each cell
@@ -133,15 +133,15 @@ Sub FillSheetCells(resCsv As Variant)
                         End With
                     End If
                 Next
-            End if
+            End If
         Else
             Set fillSheet = Sheets(2)
-            if nCsvCurRowx = 1 Then ' MoldName, SaveDate, Materials, Colour, MoldNum
+            If nCsvCurRowx = 1 Then ' MoldName, SaveDate, Materials, Colour, MoldNum
                 fillSheet.Range("A3").Resize(1, UBound(aCsvRowData) + 1) = aCsvRowData
-            Elseif nCsvCurRowx = 2 Then ' 9, 2019/3/4-16:17:43, 1, 2, 3
+            ElseIf nCsvCurRowx = 2 Then ' 9, 2019/3/4-16:17:43, 1, 2, 3
                 fillSheet.Range("A4").Resize(1, UBound(aCsvRowData) + 1) = aCsvRowData
-            End if
-        End if
+            End If
+        End If
 
         nCsvCurRowx = nCsvCurRowx + 1
     Loop
@@ -156,21 +156,30 @@ Sub CreateSheets(sheetsDict As Object)
     Dim aKeys As Variant, nInx As Integer
     aKeys = sheetsDict.keys
 
-    For nInx = 0 To UBound(aKeys)
+    Dim newShtCnts As Integer: newShtCnts = UBound(aKeys) + 1
+    For nInx = 0 To newShtCnts
         Sheets.Add After:=moldHeadSheet
-        ActiveSheet.Name = aKeys(nInx)
-        Dim aTitle as Variant : aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
-        ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
+
+        If nInx <> newShtCnts Then
+            ActiveSheet.Name = aKeys(nInx)
+
+            Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
+            ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
+        Else
+            ActiveSheet.Name = "Merge"
+            ActiveWindow.SelectedSheets.Visible = False
+        End If
+
     Next
 End Sub
 
 Sub BeautySheets(sheetsDict As Object)
-    Dim group as Variant
-    For Each group in sheetsDict
-        Dim sh as Worksheet : set sh = Sheets(group)
+    Dim group As Variant
+    For Each group In sheetsDict
+        Dim sht As Worksheet: Set sht = Sheets(group)
 
         ' Freeze The 1st Row
-        sh.Activate
+        sht.Activate
         With ActiveWindow
             .SplitColumn = 0
             .SplitRow = 1
@@ -191,11 +200,9 @@ Sub DelGroupSheets()
     Application.DisplayAlerts = False
     Dim nInx As Integer
     ' sheet's index start from 1
-    For nInx = 1 To Sheets.Count
-        If nInx > 2 Then
-            ' the top two sheets is standard, delete others sheets only
-            Worksheets(Sheets(3)).Delete
-        End If
+    For nInx = 3 To Sheets.Count
+        ' the top two sheets is standard, delete others sheets only
+        Sheets(3).Delete
     Next
     Application.DisplayAlerts = True
 End Sub

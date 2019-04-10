@@ -4,6 +4,7 @@ Public g_precDict As Object
 Public g_cnDict as Object
 Public g_enDict as Object
 Public g_sheetDict as Object
+Public g_colxAlphaDict as Object
 
 ' * GetDict  k=DataID，v=translated content
 Function GetDict(DB As String)
@@ -17,6 +18,7 @@ Function GetDict(DB As String)
     Set g_enDict = CreateObject("Scripting.Dictionary")
     Set g_groupDict = CreateObject("Scripting.Dictionary")
     Set g_sheetDict = CreateObject("Scripting.Dictionary")
+    Set g_colxAlphaDict = CreateObject("Scripting.Dictionary")
 
     ' PART 3 Travel DB worksheet And Set Dict
     Const idColx  As Integer = 1
@@ -48,4 +50,12 @@ Function GetDict(DB As String)
             End if
         End If
     Next
+
+    ' { 1 : A, 2 : B, 3 : C, ... }
+    Dim myChar As String
+    Dim inx As Integer
+    For inx = 1 To 27
+        g_colxAlphaDict(inx) = chr(64 + inx)
+    Next
+
 End Function

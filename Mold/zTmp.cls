@@ -11,7 +11,8 @@ Application.ScreenUpdating = False
 For j = 1 To Sheets.Count
    If Sheets(j).Name <> ActiveSheet.Name Then
        x = ActiveSheet.UsedRange.Rows.Count + 1
-       Sheets(j).UsedRange.Copy ActiveSheet.Cells(x, 1)
+       ' Sheets(j).UsedRange.Copy ActiveSheet.Cells(x, 1)
+       Sheets(j).UsedRange.offset(1, 0).Copy ActiveSheet.Cells(x, 1)
    End If
 Next
 Application.ScreenUpdating = True
