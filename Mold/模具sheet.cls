@@ -38,11 +38,6 @@ End Sub
 Private Sub CommandButton2_Click()
     Application.ScreenUpdating = False
 
-    Dim mergeSht As Worksheet: Set mergeSht = Sheets("Merge")
-    ' PART 1 Clean Merge-Sheet
-    mergeSht.Visible = True
-    Call ClearCells(mergeSht)
-
     ' PART 2 Get Dict
     Call moldDict.GetDict("对照表")
 
@@ -52,6 +47,7 @@ Private Sub CommandButton2_Click()
     Dim csvSavepath As Variant: csvSavepath = Application.GetSaveAsFilename(InitialFileName:=fileName, FileFilter:="(*.csv),*.csv")
 
     If VarType(csvSavepath) = vbBoolean Then
+        ' moldHeadSheet.Activate
         Exit Sub
     End If
 
@@ -73,12 +69,16 @@ Private Sub CommandButton2_Click()
     offsetRows = 3
     Call writeCsvLine(maxRows, maxCols, offsetRows, moldHeadSheet, exportFile)
 
-    ' PART 6 Write DataID Rows Target
-    ' exportFile.writeline ("DataID,DataValue,Description#1,Description#2,")
+    ' PART 6 Clean Merge-Sheet
+    Dim mergeSht As Worksheet: Set mergeSht = Sheets("Merge")
+    mergeSht.Visible = True
+    Call ClearCells(mergeSht)
+
+    ' PART 7 Write DataID Title To mergeSht
     Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
     mergeSht.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
 
-    ' PART 7 Write Each Group-Sheet's Cells To The Merge-Sheet(hidden)
+    ' PART 8 Write Each Group-Sheet's Cells To The Merge-Sheet(hidden)
     ' --- Merge Scattered Sheets To The Merge-Sheet
     Dim inx1 As Integer, MergeOffsetRowx As Variant, groupShtCnts As Integer: groupShtCnts = Sheets.Count
     Dim curSht As Object
@@ -90,43 +90,45 @@ Private Sub CommandButton2_Click()
         End If
     Next
 
-    ' PART 8 Beauty Merge-Sheet And Sort Cells According to DataID(Ascending Order)
+    ' PART 9 Beauty Merge-Sheet
     With mergeSht.Cells
             .Columns.AutoFit
             .HorizontalAlignment = xlHAlignCenter
     End With
 
-    ' PART 9 Hex => Dec
+    ' PART 10 Append Serial Colx
     maxRows = Application.CountA(mergeSht.Range("A:A"))
     Dim serialColx As Integer: serialColx = Application.CountA(mergeSht.Range("1:1")) + 1
     Dim rowx As Integer
     For rowx = 2 To maxRows
         Dim sHex As String, nHex As Integer
-        Debug.Print "#1", sHex
         sHex = Replace(mergeSht.Cells(rowx, 1), "0x", "&H")
         nHex = CInt(sHex)
         mergeSht.Cells(rowx, serialColx) = nHex
     Next
 
-    ' PART 10 Sort Merge-Sheet
-    Dim sSerialColx As String: sSerialColx = g_colxAlphaDict(serialColx)
-    mergeSht.Columns(sSerialColx & ":" & sSerialColx).Select
-    mergeSht.Sort.SortFields.Clear
-    mergeSht.Sort.SortFields.Add Key:=Range(sSerialColx & "1"), _
-        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    With mergeSht.Sort
-        .SetRange Range("A2:" & sSerialColx & maxRows)
-        .Header = xlNo
-        .MatchCase = False
-        .Orientation = xlTopToBottom
-        .SortMethod = xlPinYin
-        .Apply
-    End With
+    ' PART 11 Sort Merge-Sheet Accoring to Serial Colx
+    ' Dim sSerialColx As String: sSerialColx = g_colxAlphaDict(serialColx)
+    ' mergeSht.Columns(sSerialColx & ":" & sSerialColx).Select
+    ' mergeSht.Sort.SortFields.Clear
+    ' mergeSht.Sort.SortFields.Add Key:=Range(sSerialColx & "1"), _
+    '     SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    ' With mergeSht.Sort
+    '     .SetRange Range("A2:" & sSerialColx & maxRows)
+    '     .Header = xlNo
+    '     .MatchCase = False
+    '     .Orientation = xlTopToBottom
+    '     .SortMethod = xlPinYin
+    '     .Apply
+    ' End With
 
-    ' PART 11 Delete Serial Colx
+    ' PART 12 Delete Serial Colx
+    Dim serialAlpha As String: serialAlpha = g_colxAlphaDict(serialColx)
+    Dim sRange As String : sRange = serialAlpha & ":" & serialAlpha
+    mergeSht.Columns(sRange).Select
     Selection.Delete Shift:=xlToLeft
 
-    ' PART 12 Continue Writing The CSV Accoring to this Merge Sheet
+    ' PART 13 Continue Writing The CSV Accoring to this Merge Sheet
     offsetRows = 1
     maxRows = Application.CountA(mergeSht.Range("A:A"))
     Call writeCsvLine(maxRows, maxCols, offsetRows, mergeSht, exportFile)
@@ -144,4 +146,6 @@ Private Sub CommandButton2_Click()
     MsgBox "Export Success!"
 
 End Sub
+
+
 
