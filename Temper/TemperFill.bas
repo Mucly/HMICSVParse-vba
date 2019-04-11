@@ -8,11 +8,23 @@ End Sub
 
 Sub BeautySheets()
     ' PART 1 Format Time Colx
-    ' Const dataColx As Integer = 2
-    ' Dim maxCols  As Integer: maxCols = Application.CountA(ActiveSheet.Range("A:A")) + 3
-    ' Range("B3:" & "B" & maxCols).NumberFormat = "yyyy-m-d h:mm:ss"
+    Const dataColx As Integer = 2
+    Dim maxCols  As Integer: maxCols = Application.CountA(ActiveSheet.Range("A:A")) + 3
+    Range("B3:B" & maxCols).NumberFormat = "yyyy-m-d hh:mm:ss"
+End Sub
 
-    ' PART 2 Format Each Precison Colx
+Sub FormatColWithPrecison(precDict As Object)
+    Dim colx As Integer
+    Dim aKeys As Variant: aKeys = precDict.keys
+    Dim keysCnt As Integer: keysCnt = UBound(aKeys)
+    For colx = 0 To keysCnt
+        Dim prec As Integer: prec = precDict(colx)
+        If prec <> 0 Then
+            Dim fmt As String
+            fmt = "0." & String(prec, "0") & "_ "
+            Range(g_colxAlphaDict(colx) & ":" & g_colxAlphaDict(colx)).NumberFormatLocal = fmt
+        End If
+    Next
 End Sub
 
 Sub DelEachSegSheets()
@@ -68,50 +80,62 @@ Sub CreateEachSegSheets()
 
 End Sub
 
-Function ParseCsvAndFillCell(resCSV As Variant, fillRowx As Integer)
+Function ParseCsvAndFillCell(resCsv As Variant, fillRowx As Integer)
     ' PART 1 Clean old Datas
     Application.ScreenUpdating = False
     Call ClearCurSheet
 
     ' PART 2 Fill Cells By Lines, Not By Two Dimentions Array
-    Dim resCSVRowx As Integer: resCSVRowx = 0
+    Dim resCsvRowx As Integer: resCsvRowx = 0
     Dim sCurLine As String: sCurLine = ""
     Dim aRowData As Variant
     Dim head As String, tail As String, fmt As String
-    Rem Dim dFormatColx As Object : Set dFormatColx = CreateObject("Scripting.Dictionary") '
+    Dim a2D(7300, 120) As Variant ' Max Temper Rows < 7300, Max Temper Colx < 120
+    Dim resCsvRows As Integer, resCsvCols As Integer: resCsvRows = 0: resCsvCols = 0
 
-    Open resCSV For Input As #66
+    ' PART 3 1st Read, Get Resource Csv's Rows & Cols
+    Open resCsv For Input As #66
+    Do While Not EOF(66)
+        Line Input #66, sCurLine
+
+        If resCsvRows = 0 Then
+            aRowData = Split(sCurLine, ",")
+            resCsvCols = UBound(aRowData)
+        End If
+        resCsvRows = resCsvRows + 1
+    Loop
+    Close #66
+
+    ' PART 4 2rd Read, Fill a2D According Csv File & Some Global Dictionary
+    Open resCsv For Input As #66
     Do While Not EOF(66)
         Line Input #66, sCurLine
         aRowData = Split(sCurLine, ",")
 
-        Dim colInx As Integer, cellValue As Variant ' colInx != colx, colInx START FROM 0
-        Dim resCols As Integer: resCols = UBound(aRowData)
-        Dim resColsAdd1 As Integer: resColsAdd1 = resCols + 1  ' Colx Start From 1, So need Add 1
-
+        Dim resCsvColx As Integer, cellValue As Variant ' resCsvColx != colx, resCsvColx START FROM 0
         ' Set Data's Precsion Which Belong to Current Row Array
-        For colInx = 0 To resCols
+        For resCsvColx = 0 To resCsvCols
             fmt = "General"
 
-            Dim fillColx As Integer: fillColx = colInx + 1
-            cellValue = aRowData(colInx)
-            ' Translate Title(Rowx1) And Reset g_precDict
-            If resCSVRowx = 0 Then
+            Dim fillColx As Integer: fillColx = resCsvColx + 1
+            cellValue = aRowData(resCsvColx)
+            ' Translate Title(Rowx1) And Reset g_tagPrecDict
+            If resCsvRowx = 0 Then
                 ' 1 - Get Translate
                 If g_meanDict.exists(cellValue) Then
                     cellValue = g_meanDict(cellValue)
                 End If
                 ' 2 - Get Precison Colx
-                If (colInx >= 2) And g_precDict.exists(aRowData(colInx)) Then
-                    g_precDict(colInx) = g_precDict(aRowData(colInx))
+                If (resCsvColx >= 2) And g_tagPrecDict.exists(aRowData(resCsvColx)) Then
+                    g_colxPrecDict(fillColx) = g_tagPrecDict(aRowData(resCsvColx))
                 End If
             Else
             ' Those Rowx Need Precsion
             ' Note : The Maximum Precsion is ONE !
-                If g_precDict(colInx) <> 0 Then
+                If g_colxPrecDict(fillColx) <> 0 Then
                     Dim prec As Integer
-                    If g_precDict.exists(colInx) Then
-                        prec = g_precDict(colInx)
+                    If g_colxPrecDict.exists(fillColx) Then
+                        prec = g_colxPrecDict(fillColx)
                         ' prec <> 0 Float Only
                         If prec <> 0 Then
                             Dim maxBitWeight As Variant, digit As Integer
@@ -133,33 +157,28 @@ Function ParseCsvAndFillCell(resCSV As Variant, fillRowx As Integer)
                                 fmt = head + "." + tail
                             End If
                             cellValue = Format(cellValue / maxBitWeight, fmt)
-                            fmt = fmt + "_ " ' Selection.NumberFormatLocal = "0.00_ "
                         End If
                     End If
                 End If
             End If
 
-            ' TODO
-            ' When Precsion > 1, Open Those Code
-            ' * Optimize : Gets the column number that needs precision and formats it once
-            ' * cell with precsion   =>   fmt = fmt & "_ "
-            If fmt = "General" Then
-                Cells(fillRowx, fillColx).Value = cellValue
-            Else
-                With Cells(fillRowx, fillColx)
-                    .Value = cellValue
-                    .NumberFormatLocal = fmt
-                End With
-            End If
+            a2D(resCsvRowx, resCsvColx) = cellValue
         Next
 
         ' Counter Accumulate
-    resCSVRowx = resCSVRowx + 1
-    fillRowx = fillRowx + 1
+        resCsvRowx = resCsvRowx + 1
+        fillRowx = fillRowx + 1
     Loop
     Close #66
 
-    Rem Call BeautySheets
+    ' PART 5 Fill Cells Start From A3 Cell
+    Range("A3").Resize(resCsvRows + 1, resCsvCols + 1) = a2D
+
+    ' PART 5 Format Columns
+    Call FormatColWithPrecison(g_colxPrecDict)
+
+    ' PART 6 Beauty And Create Sheets, Then Draw Charts
+    Call BeautySheets
     Call CreateEachSegSheets
 
     ' END
@@ -168,3 +187,4 @@ Function ParseCsvAndFillCell(resCSV As Variant, fillRowx As Integer)
     MsgBox "Success!"
 
 End Function
+

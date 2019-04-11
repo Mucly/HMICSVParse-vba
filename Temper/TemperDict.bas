@@ -6,7 +6,8 @@ Function GetTransDict(DB As String)
     Set DBSheet = Worksheets(DB)
 
     Set g_meanDict = CreateObject("Scripting.Dictionary")
-    Set g_precDict = CreateObject("Scripting.Dictionary")
+    Set g_tagPrecDict = CreateObject("Scripting.Dictionary")
+    Set g_colxPrecDict = CreateObject("Scripting.Dictionary")    
     Set g_colxAlphaDict = CreateObject("Scripting.Dictionary")
 
     Const tagColx As Integer = 1
@@ -29,7 +30,7 @@ Function GetTransDict(DB As String)
 
             ' tag's prec, if prec not exists, pass
             If rowx > 3 Then
-                g_precDict(tag) = prec
+                g_tagPrecDict(tag) = prec
             End If
 
         End If

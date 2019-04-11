@@ -2,8 +2,12 @@ Option Explicit
 
 ' Dict
 Public g_meanDict As Object
-Public g_precDict As Object
+
+Public g_tagPrecDict As Object
+Public g_colxPrecDict As Object
+
 Public g_segSheetsDict As Object
+
 Public g_colxAlphaDict As Object
 
 ' Integer
