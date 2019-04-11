@@ -1,9 +1,20 @@
 Option Explicit
 
-Sub ClearCurSheet()
-    Cells.Select
+Sub InitTargetSheet(sht As Worksheet)
+    ' PART 1 Delete All Cells
+    sht.Cells.Select
     Selection.ClearContents
     Selection.NumberFormat = "General"
+
+    ' PART 2 Delete Shapes Except Button
+    Dim shp As Variant
+    For Each shp In ActiveSheet.Shapes
+        ' button.type = 12
+        If shp.Type <> 12 Then
+            shp.Delete
+        End If
+    Next
+
 End Sub
 
 Sub BeautySheets()
@@ -13,21 +24,7 @@ Sub BeautySheets()
     Range("B3:B" & maxCols).NumberFormat = "yyyy-m-d hh:mm:ss"
 End Sub
 
-Sub FormatColWithPrecison(precDict As Object)
-    Dim colx As Integer
-    Dim aKeys As Variant: aKeys = precDict.keys
-    Dim keysCnt As Integer: keysCnt = UBound(aKeys)
-    For colx = 0 To keysCnt
-        Dim prec As Integer: prec = precDict(colx)
-        If prec <> 0 Then
-            Dim fmt As String
-            fmt = "0." & String(prec, "0") & "_ "
-            Range(g_colxAlphaDict(colx) & ":" & g_colxAlphaDict(colx)).NumberFormatLocal = fmt
-        End If
-    Next
-End Sub
-
-Sub DelEachSegSheets()
+Sub DelAllCharts()
     Application.DisplayAlerts = False
     Dim nInx As Integer
     ' sheet's index start from 1
@@ -40,9 +37,9 @@ Sub DelEachSegSheets()
     Application.DisplayAlerts = True
 End Sub
 
-Sub CreateEachSegSheets()
+Sub DrawCharts()
     ' PART 1 Del Sheets
-    Call DelEachSegSheets
+    Call DelAllCharts
 
     ' PART 2 Draw Charts
     Dim aSegSheetName As Variant: aSegSheetName = g_meanDict.Items
@@ -80,17 +77,18 @@ Sub CreateEachSegSheets()
 
 End Sub
 
-Function ParseCsvAndFillCell(resCsv As Variant, fillRowx As Integer)
+Function ParseCsvAndFillCell(resCsv As Variant)
     ' PART 1 Clean old Datas
     Application.ScreenUpdating = False
-    Call ClearCurSheet
+    Dim curSht As Worksheet : Set curSht = ActiveSheet
+    Call InitTargetSheet(curSht)
 
     ' PART 2 Fill Cells By Two Dimentions Array
     Dim resCsvRowx As Integer: resCsvRowx = 0
     Dim sCurLine As String: sCurLine = ""
     Dim aRowData As Variant
     Dim head As String, tail As String, fmt As String
-    Dim a2D(7300, 120) As Variant ' Max Temper Rows < 7300, Max Temper Colx < 120
+    Dim a2D(751, 3) As Variant ' ZhouYongHan : Max PPH Rows = 751, Max PPH Colx = 3
     Dim resCsvRows As Integer, resCsvCols As Integer: resCsvRows = 0: resCsvCols = 0
 
     ' PART 3 1st Read, Get Resource Csv's Rows & Cols
@@ -112,77 +110,24 @@ Function ParseCsvAndFillCell(resCsv As Variant, fillRowx As Integer)
         Line Input #66, sCurLine
         aRowData = Split(sCurLine, ",")
 
-        Dim resCsvColx As Integer, cellValue As Variant ' resCsvColx != colx, resCsvColx START FROM 0
-        ' Set Data's Precsion Which Belong to Current Row Array
-        For resCsvColx = 0 To resCsvCols
-            fmt = "General"
-
-            Dim fillColx As Integer: fillColx = resCsvColx + 1
-            cellValue = aRowData(resCsvColx)
-            ' Translate Title(Rowx1) And Reset g_tagPrecDict
-            If resCsvRowx = 0 Then
-                ' 1 - Get Translate
-                If g_meanDict.exists(cellValue) Then
-                    cellValue = g_meanDict(cellValue)
-                End If
-                ' 2 - Get Precison Colx
-                If (resCsvColx >= 2) And g_tagPrecDict.exists(aRowData(resCsvColx)) Then
-                    g_colxPrecDict(fillColx) = g_tagPrecDict(aRowData(resCsvColx))
-                End If
-            Else
-            ' Those Rowx Need Precsion
-            ' Note : The Maximum Precsion is ONE !
-                If g_colxPrecDict(fillColx) <> 0 Then
-                    Dim prec As Integer
-                    If g_colxPrecDict.exists(fillColx) Then
-                        prec = g_colxPrecDict(fillColx)
-                        ' prec <> 0 Float Only
-                        If prec <> 0 Then
-                            Dim maxBitWeight As Variant, digit As Integer
-                            maxBitWeight = 1
-
-                            digit = Len(cellValue)
-                            maxBitWeight = Application.WorksheetFunction.Power(10, prec)
-                            If prec > digit Then
-                                head = "0"
-                                tail = String(prec, "0")
-                                fmt = head + "." + tail
-                            ElseIf prec < digit Then
-                                head = "0"
-                                tail = String(prec, "0")
-                                fmt = head + "." + tail
-                            Else
-                                head = "0"
-                                tail = String(prec, "0")
-                                fmt = head + "." + tail
-                            End If
-                            cellValue = Format(cellValue / maxBitWeight, fmt)
-                        End If
-                    End If
-                End If
-            End If
-
-            a2D(resCsvRowx, resCsvColx) = cellValue
+        Dim resInx As Integer, cellValue As Variant
+        For resInx = 0 To resCsvCols
+            Dim fillColx As Integer: fillColx = resInx + 1
+            a2D(resCsvRowx, resInx) = cellValue
         Next
 
         ' Counter Accumulate
         resCsvRowx = resCsvRowx + 1
-        fillRowx = fillRowx + 1
     Loop
     Close #66
 
-    ' PART 5 Fill Cells Start From A3 Cell
+    ' ' PART 5 Fill Cells Start From A3 Cell
     Range("A3").Resize(resCsvRows + 1, resCsvCols + 1) = a2D
 
-    ' PART 5 Format Columns
-    Call FormatColWithPrecison(g_colxPrecDict)
+    ' Call DrawCharts
 
-    ' PART 6 Beauty And Create Sheets, Then Draw Charts
-    Call BeautySheets
-    Call CreateEachSegSheets
-
-    ' END
-    Sheets(2).Activate
+    ' ' END
+    ' Sheets(2).Activate
     Application.ScreenUpdating = True
     MsgBox "Success!"
 
