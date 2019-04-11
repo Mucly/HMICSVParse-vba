@@ -24,23 +24,7 @@ Sub BeautySheets()
     Range("B3:B" & maxCols).NumberFormat = "yyyy-m-d hh:mm:ss"
 End Sub
 
-Sub DelAllCharts()
-    Application.DisplayAlerts = False
-    Dim nInx As Integer
-    ' sheet's index start from 1
-    For nInx = 1 To Sheets.Count
-        If nInx > 2 Then
-            ' the top two sheets is standard, delete others sheets only
-            Sheets(3).Delete
-        End If
-    Next
-    Application.DisplayAlerts = True
-End Sub
-
 Sub DrawCharts()
-    ' PART 1 Del Sheets
-    Call DelAllCharts
-
     ' PART 2 Draw Charts
     Dim aSegSheetName As Variant: aSegSheetName = g_meanDict.Items
     Dim inx As Integer
@@ -106,25 +90,39 @@ Function ParseCsvAndFillCell(resCsv As Variant)
 
     ' PART 4 2rd Read, Fill a2D According Csv File & Some Global Dictionary
     Open resCsv For Input As #66
-    Do While Not EOF(66)
+    Const meanRowx As Integer = 1
+    Const dataColx As Integer = 1
+    Dim rowx As Integer, serial As Integer : serial = 1
+    For rowx = 1 To resCsvRows
         Line Input #66, sCurLine
-        aRowData = Split(sCurLine, ",")
+        if sCurLine = "" Then
+            a2D(rowx, 0) = ","
+        Else
+            aRowData = Split(sCurLine, ",")
+            Dim xInx As Integer : xInx = rowx - 1
+            Dim yInx As Integer, cellValue As Variant
+            For yInx = 0 To resCsvCols
+                cellValue = aRowData(yInx)
 
-        Dim resInx As Integer, cellValue As Variant
-        For resInx = 0 To resCsvCols
-            Dim fillColx As Integer: fillColx = resInx + 1
-            a2D(resCsvRowx, resInx) = cellValue
-        Next
+                ' Get Mean
+                if rowx = meanRowx Then cellValue = g_meanDict(cellValue)
 
-        ' Counter Accumulate
-        resCsvRowx = resCsvRowx + 1
-    Loop
+                ' --- Set Serial
+                if (yInx = dataColx) And (instr(cellValue, " 01") > 0) Then
+                    a2D(xInx, 0) = serial
+                    serial = serial + 1
+                End If
+
+                a2D(xInx, yInx) = cellValue
+            Next
+        End if
+    Next
     Close #66
 
     ' ' PART 5 Fill Cells Start From A3 Cell
     Range("A3").Resize(resCsvRows + 1, resCsvCols + 1) = a2D
 
-    ' Call DrawCharts
+    Call DrawCharts
 
     ' ' END
     ' Sheets(2).Activate
