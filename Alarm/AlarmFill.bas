@@ -37,7 +37,7 @@ Function ParseCsvAndFillCell(resCsv As Variant, offsetRowx As Integer)
 
     ' PART 3 第二次逐行读取csv文件，给二维数组赋值
     const nMeanColx as Integer = 4
-    Dim csvCurRowx As Integer, a2D(0 To 5000, 0 To 5) As Variant ' 这里只能常量
+    Dim csvCurRowx As Integer, a2D(10000, 0 To 150) As Variant ' 这里只能常量
     csvCurRowx = 0
     Open resCsv For Input As #1
     Do While Not EOF(1) ' 逐行循环 #1文件
