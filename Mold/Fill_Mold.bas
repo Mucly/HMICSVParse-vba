@@ -67,11 +67,9 @@ Sub FillSheetCells(resCsv As Variant)
     Const cnColx As Integer = 3
     Const enColx As Integer = 4
 
-    ' PART 2 Create a Sheet Named undefined
-    g_sheetDict("undefined") = "undefined"  ' This sheet, called undefined, is used to save data that is not defined in the database sheet
     Dim undefinedSht As Worksheet : Set undefinedSht = Sheets("undefined")
 
-    ' PART 3 Iterate csv file and fill Cells
+    ' PART 2 Iterate csv file and fill Cells
     Do While Not EOF(1)
         Line Input #1, sCurLine
         if sCurLine <> "" Then

@@ -50,6 +50,7 @@ Function GetDict(DB As String)
             End if
         End If
     Next
+    g_sheetDict("undefined") = "undefined"  ' This sheet, called undefined, is used to save data that is not defined in the database sheet
 
     ' { 1 : A, 2 : B, 3 : C, ... }
     Dim myChar As String

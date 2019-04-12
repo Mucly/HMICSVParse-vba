@@ -108,19 +108,19 @@ Private Sub CommandButton2_Click()
     Next
 
     ' PART 11 Sort Merge-Sheet Accoring to Serial Colx
-    ' Dim sSerialColx As String: sSerialColx = g_colxAlphaDict(serialColx)
-    ' mergeSht.Columns(sSerialColx & ":" & sSerialColx).Select
-    ' mergeSht.Sort.SortFields.Clear
-    ' mergeSht.Sort.SortFields.Add Key:=Range(sSerialColx & "1"), _
-    '     SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    ' With mergeSht.Sort
-    '     .SetRange Range("A2:" & sSerialColx & maxRows)
-    '     .Header = xlNo
-    '     .MatchCase = False
-    '     .Orientation = xlTopToBottom
-    '     .SortMethod = xlPinYin
-    '     .Apply
-    ' End With
+    Dim sSerialColx As String: sSerialColx = g_colxAlphaDict(serialColx)
+    mergeSht.Columns(sSerialColx & ":" & sSerialColx).Select
+    mergeSht.Sort.SortFields.Clear
+    mergeSht.Sort.SortFields.Add Key:=Range(sSerialColx & "1"), _
+        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    With mergeSht.Sort
+        .SetRange Range("A2:" & sSerialColx & maxRows)
+        .Header = xlNo
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
 
     ' PART 12 Delete Serial Colx
     Dim serialAlpha As String: serialAlpha = g_colxAlphaDict(serialColx)
