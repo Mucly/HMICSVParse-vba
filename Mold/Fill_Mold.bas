@@ -32,6 +32,7 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     ' PART 3
     Call FillSheetCells(resCsv)
 
+    ' PART 4
     Call BeautySheets(g_sheetDict)
 
     ' END
@@ -157,7 +158,6 @@ Sub FillSheetCells(resCsv As Variant)
                         End With
                     End If
                 Next
-
             Else
                 Set fillSheet = Sheets(2)
                 If nCsvCurRowx = 1 Then ' MoldName, SaveDate, Materials, Colour, MoldNum
