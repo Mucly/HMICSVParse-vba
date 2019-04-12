@@ -4,7 +4,7 @@ Private Sub CommandButton1_Click()
     ' PART 1 get Dict
     Dim DBSheet As Object
 
-    Call moldDict.GetDict("对照表")
+    Call GetDict("对照表")
 
     ' PART 2 file explorer
     Dim csvRes As Variant
@@ -39,7 +39,7 @@ Private Sub CommandButton2_Click()
     Application.ScreenUpdating = False
 
     ' PART 2 Get Dict
-    Call moldDict.GetDict("对照表")
+    Call GetDict("对照表")
 
     ' PART 3 Pop File-Explorer
     Dim moldHeadSheet As Worksheet: Set moldHeadSheet = Sheets(2)
@@ -72,7 +72,7 @@ Private Sub CommandButton2_Click()
     ' PART 6 Clean Merge-Sheet
     Dim mergeSht As Worksheet: Set mergeSht = Sheets("Merge")
     mergeSht.Visible = True
-    Call ClearCells(mergeSht)
+    Call InitTargetSheet(mergeSht)
 
     ' PART 7 Write DataID Title To mergeSht
     Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")

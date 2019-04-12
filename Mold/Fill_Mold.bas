@@ -1,16 +1,30 @@
 Option Explicit
-' clear current sheet's cells
-Function ClearCurSheet()
-    Cells.Select
+
+Sub InitTargetSheet(sht As Worksheet)
+    ' PART 1 Delete All Cells
+    sht.Activate
+    sht.Cells.Select
     Selection.ClearContents
-End Function
+    Selection.NumberFormat = "General"
+
+    ' PART 2 Delete Shapes Except Button
+    Dim shp As Variant
+    For Each shp In ActiveSheet.Shapes
+        ' button.type = 12
+        If shp.Type <> 12 Then
+            shp.Delete
+        End If
+    Next
+
+End Sub
 
 Function ParseCsvAndFillCell(resCsv As Variant)
     ' START
     Application.ScreenUpdating = False
 
     ' PART 1
-    Call ClearCurSheet
+    Dim parseSht As Worksheet : Set parseSht = Sheets(2)
+    Call InitTargetSheet(parseSht)
 
     ' PART 2
     Call CreateSheets(g_sheetDict)
@@ -52,7 +66,11 @@ Sub FillSheetCells(resCsv As Variant)
     Const cnColx As Integer = 3
     Const enColx As Integer = 4
 
-    ' PART 2 Iterate csv file and fill Cells
+    ' PART 2 Create a Sheet Named undefined
+    g_sheetDict("undefined") = "undefined"  ' This sheet, called undefined, is used to save data that is not defined in the database sheet
+    Dim undefinedSht As Worksheet : Set undefinedSht = Sheets("undefined")
+
+    ' PART 3 Iterate csv file and fill Cells
     Do While Not EOF(1)
         Line Input #1, sCurLine
         if sCurLine <> "" Then
@@ -61,81 +79,85 @@ Sub FillSheetCells(resCsv As Variant)
             Dim colx As Integer, cellValue As String, group As String
             Dim DataID As String : DataID = aCsvRowData(0)
             Dim fillColx As Integer : fillColx = 0
-            ' the top 3 lines's content is MoldHeader, 4th lines is unValid, others likes [ "0x400", 123, "我是中文翻译", "English Translation" ]
-            If nCsvCurRowx > 4 Then
+            ' the top 2 lines is MoldHeader, 3th lines is unValid, others likes [ "0x400", 123, "我是中文翻译", "English Translation" ]
+            If nCsvCurRowx > 3 Then
                 Dim fillSheet As Worksheet, fillRowx As Integer
-                ' create vaild groups only
+
                 If g_groupDict.exists(DataID) Then
                     group = g_groupDict(DataID)
                     Set fillSheet = Sheets(group)
-                    ' fillRowx = fillSheet.Range("A65536").End(xlUp).Row + 1
-                    fillRowx = Application.CountA(fillSheet.Range("A:A")) + 1
+                Else
+                    Set fillSheet = undefinedSht
+                End if
 
-                    ' --- 遍历每行数据
-                    For colx = 0 To UBound(aCsvRowData)
-                        Dim fmt As String: fmt = "General"
-                        cellValue = aCsvRowData(colx)
-                        fillColx = colx + 1
+                ' fillRowx = fillSheet.Range("A65536").End(xlUp).Row + 1
+                fillRowx = Application.CountA(fillSheet.Range("A:A")) + 1
 
-                        ' this colx need cell prec-format
-                        If fillColx = valueColx Then
-                            Dim prec As Integer, head As String, tail As String
-                            If g_precDict.exists(DataID) Then
-                                prec = g_precDict(DataID)
+                ' --- 遍历每行数据
+                For colx = 0 To UBound(aCsvRowData)
+                    Dim fmt As String: fmt = "General"
+                    cellValue = aCsvRowData(colx)
+                    fillColx = colx + 1
 
-                                Dim maxBitWeight As Variant, digit As Integer
-                                maxBitWeight = 1
-                                ' prec <> 0 Float Only
-                                If prec <> 0 Then
-                                    cellValue = Replace(cellValue, ".", "")
-                                    digit = Len(cellValue)
-                                    maxBitWeight = Application.WorksheetFunction.Power(10, prec)
-                                    If prec > digit Then
-                                        head = "0"
-                                        tail = String(prec, "0")
-                                        fmt = head + "." + tail
-                                    ElseIf prec < digit Then
-                                        head = "0"
-                                        tail = String(prec, "0")
-                                        fmt = head + "." + tail
-                                    Else
-                                        head = "0"
-                                        tail = String(prec, "0")
-                                        fmt = head + "." + tail
-                                    End If
+                    ' this colx need cell prec-format
+                    If fillColx = valueColx Then
+                        Dim prec As Integer, head As String, tail As String
+                        If g_precDict.exists(DataID) Then
+                            prec = g_precDict(DataID)
+
+                            Dim maxBitWeight As Variant, digit As Integer
+                            maxBitWeight = 1
+                            ' prec <> 0 Float Only
+                            If prec <> 0 Then
+                                cellValue = Replace(cellValue, ".", "")
+                                digit = Len(cellValue)
+                                maxBitWeight = Application.WorksheetFunction.Power(10, prec)
+                                If prec > digit Then
+                                    head = "0"
+                                    tail = String(prec, "0")
+                                    fmt = head + "." + tail
+                                ElseIf prec < digit Then
+                                    head = "0"
+                                    tail = String(prec, "0")
+                                    fmt = head + "." + tail
                                 Else
-                                ' prec = 0 : Positive Integer Only
-                                    fmt = "0"
+                                    head = "0"
+                                    tail = String(prec, "0")
+                                    fmt = head + "." + tail
                                 End If
+                            Else
+                            ' prec = 0 : Positive Integer Only
+                                fmt = "0"
+                            End If
 
-                                cellValue = Format(cellValue / maxBitWeight, fmt)
-                            End If
-                        ' this colx need get cn trans
-                        ElseIf fillColx = cnColx Then
-                            If g_cnDict.exists(DataID) Then
-                                cellValue = g_cnDict(DataID)
-                                ' Debug.print "group=", group, "   DataID=", DataID, " CN=", cellValue
-                            End If
-                        ' this colx need get en trans
-                        ElseIf fillColx = enColx Then
-                            If g_enDict.exists(DataID) Then
-                                cellValue = g_enDict(DataID)
-                                ' Debug.print "group=", group, "   DataID=", DataID, " EN=", cellValue
-                            End If
-                        ' default colx
-                        Else
-                            cellValue = cellValue
+                            cellValue = Format(cellValue / maxBitWeight, fmt)
                         End If
+                    ' this colx need get cn trans
+                    ElseIf fillColx = cnColx Then
+                        If g_cnDict.exists(DataID) Then
+                            cellValue = g_cnDict(DataID)
+                            ' Debug.print "group=", group, "   DataID=", DataID, " CN=", cellValue
+                        End If
+                    ' this colx need get en trans
+                    ElseIf fillColx = enColx Then
+                        If g_enDict.exists(DataID) Then
+                            cellValue = g_enDict(DataID)
+                            ' Debug.print "group=", group, "   DataID=", DataID, " EN=", cellValue
+                        End If
+                    ' default colx
+                    Else
+                        cellValue = cellValue
+                    End If
 
-                        If cellValue <> "" Then
-                            ' fill each cell
-                            With fillSheet.Cells(fillRowx, fillColx)
-                                .NumberFormat = fmt
-                                .FormulaR1C1 = cellValue
-                            End With
-                        End If
-                    Next
-                End If
+                    If cellValue <> "" Then
+                        ' fill each cell
+                        With fillSheet.Cells(fillRowx, fillColx)
+                            .NumberFormat = fmt
+                            .FormulaR1C1 = cellValue
+                        End With
+                    End If
+                Next
+
             Else
                 Set fillSheet = Sheets(2)
                 If nCsvCurRowx = 1 Then ' MoldName, SaveDate, Materials, Colour, MoldNum
@@ -149,6 +171,10 @@ Sub FillSheetCells(resCsv As Variant)
         End if
     Loop
     Close #1
+
+    ' END hidden unvaild sheet
+    undefinedSht.Visible = False
+
 End Sub
 
 Sub CreateSheets(sheetsDict As Object)
