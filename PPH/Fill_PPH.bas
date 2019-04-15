@@ -17,13 +17,6 @@ Sub InitTargetSheet(sht As Worksheet)
 
 End Sub
 
-Sub BeautySheets()
-    ' PART 1 Format Time Colx
-    Const dataColx As Integer = 2
-    Dim maxCols  As Integer: maxCols = Application.CountA(ActiveSheet.Range("A:A")) + 3
-    Range("B3:B" & maxCols).NumberFormat = "yyyy-m-d hh:mm:ss"
-End Sub
-
 Sub DrawCharts(chartsDict As Object)
     Dim aKeys As Variant: aKeys = chartsDict.keys
     Dim chartInx As Integer
@@ -91,7 +84,7 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     Const meanRowx As Integer = 1
     Const dataColx As Integer = 1
     Dim rowx As Integer, serial As Integer: serial = 1
-    Dim rangeDict As Object: Set rangeDict = CreateObject("Scripting.Dictionary")
+    Dim rangeDict As Object: Set rangeDict = CreateObject("Scripting.Dictionary") ' { 0:['B', 29, 'C', 52]}
     Dim rangeInx As Integer: rangeInx = 0
     For rowx = 1 To resCsvRows
         Line Input #66, sCurLine
@@ -113,7 +106,7 @@ Function ParseCsvAndFillCell(resCsv As Variant)
                     a2D(xInx, 0) = serial
                     serial = serial + 1
                     ' -- Set RangeDict
-                    Dim aRange As Variant: aRange = Array("B", (rowx + 2), "C", (rowx + 2 + 23))  ' [B, 29, C, 52] $=> "B29", "C52"
+                    Dim aRange As Variant: aRange = Array("B", (rowx + 2), "C", (rowx + 2 + 23))  ' [B, 29, C, 52] ==> "B29", "C52"
                     rangeDict(rangeInx) = aRange
                     rangeInx = rangeInx + 1
                 End If
