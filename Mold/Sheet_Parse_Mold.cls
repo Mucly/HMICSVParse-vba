@@ -44,19 +44,20 @@ Private Sub CommandButton2_Click()
     ' PART 3 Pop File-Explorer
     Dim moldHeadSheet As Worksheet: Set moldHeadSheet = Sheets(2)
     Dim fileName As String: fileName = moldHeadSheet.Range("A4")
-    Dim csvSavepath As Variant: csvSavepath = Application.GetSaveAsFilename(InitialFileName:=fileName, FileFilter:="(*.csv),*.csv")
+    Dim csvSavePath As Variant: csvSavePath = Application.GetSaveAsFilename(InitialFileName:=fileName, FileFilter:="(*.csv),*.csv")
 
-    If VarType(csvSavepath) = vbBoolean Then
-        ' moldHeadSheet.Activate
+    If VarType(csvSavePath) = vbBoolean Then
         Exit Sub
     End If
+
+
 
     ' PART 4 Start Dealing Sheet's Data
     Dim Fs As Object
     Set Fs = CreateObject("Scripting.FileSystemObject")
 
     Dim exportFile As Object
-    Set exportFile = Fs.createtextfile(csvSavepath)
+    Set exportFile = Fs.createtextfile(csvSavePath)
     Dim idRowx As Integer: idRowx = 0
     Dim parseRowx As Integer, parseColx As Integer, emptyRows As Integer, maxRows As Integer, maxCols As Integer
     maxRows = 0 ' vaild cells rows, there has 2 empty rows, so need add 2
@@ -137,15 +138,21 @@ Private Sub CommandButton2_Click()
     exportFile.Close
     mergeSht.Visible = False
 
-    Set csvSavepath = Nothing
+    Set csvSavePath = Nothing
     Set Fs = Nothing
 
     ' --- Active Parse-Sheet
     Sheets(2).Activate
     Application.ScreenUpdating = True  ' Restore
+
+    ' call ModifyCDB(fileName)
+
     MsgBox "Export Success!"
 
 End Sub
 
+Sub ModifyCDB(moldName As String)
+    Dim csvPath As String
+    csvPath = ThisWorkbook.Path & ""
 
-
+End Sub
