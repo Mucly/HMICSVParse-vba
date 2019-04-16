@@ -183,21 +183,24 @@ Sub CreateSheets(sheetsDict As Object)
     Dim aKeys As Variant, nInx As Integer
     aKeys = sheetsDict.keys
 
-    Dim newShtCnts As Integer: newShtCnts = UBound(aKeys) + 1
+    Dim newShtCnts As Integer: newShtCnts = UBound(aKeys)
     For nInx = 0 To newShtCnts
         Sheets.Add After:=moldHeadSheet
-
-        If nInx <> newShtCnts Then
-            ActiveSheet.Name = aKeys(nInx)
-
-            Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
-            ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
-        Else
-            ActiveSheet.Name = "Merge"
-            ActiveWindow.SelectedSheets.Visible = False
-        End If
-
+        ActiveSheet.Name = aKeys(nInx)
+        Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
+        ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
     Next
+
+    ' Create Merge-Sheet, use for merging all DataID
+    Sheets.Add After:=moldHeadSheet
+    ActiveSheet.Name = "Merge"
+    ActiveWindow.SelectedSheets.Visible = False
+
+    ' Create undefined-Sheet, use for saving those dataID which undefined in database-sheet
+    Sheets.Add After:=moldHeadSheet
+    ActiveSheet.Name = "undefined"
+    ActiveWindow.SelectedSheets.Visible = False
+
 End Sub
 
 Sub BeautySheets(sheetsDict As Object)

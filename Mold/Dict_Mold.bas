@@ -1,11 +1,4 @@
 Option Explicit
-Public g_groupDict As Object
-Public g_precDict As Object
-Public g_cnDict as Object
-Public g_enDict as Object
-Public g_sheetDict as Object
-Public g_colxAlphaDict as Object
-
 ' * GetDict  k=DataID，v=translated content
 Function GetDict(DB As String)
     ' PART 1 init DBSheet
@@ -50,7 +43,6 @@ Function GetDict(DB As String)
             End if
         End If
     Next
-    g_sheetDict("undefined") = "undefined"  ' This sheet, called undefined, is used to save data that is not defined in the database sheet
 
     ' { 1 : A, 2 : B, 3 : C, ... }
     Dim myChar As String
