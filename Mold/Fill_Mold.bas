@@ -72,6 +72,7 @@ Sub FillSheetCells(resCsv As Variant)
     ' PART 2 Iterate csv file and fill Cells
     Do While Not EOF(1)
         Line Input #1, sCurLine
+
         If sCurLine <> "" Then
             aCsvRowData = Split(sCurLine, ",")
 
@@ -79,7 +80,7 @@ Sub FillSheetCells(resCsv As Variant)
             Dim DataID As String: DataID = aCsvRowData(0)
             Dim fillColx As Integer: fillColx = 0
             ' the top 2 lines is MoldHeader, 3th lines is unValid, others likes [ "0x400", 123, "我是中文翻译", "English Translation" ]
-            If nCsvCurRowx > 3 Then
+            If nCsvCurRowx > 4 Then
                 Dim fillSheet As Worksheet, fillRowx As Integer
 
                 If g_groupDict.exists(DataID) Then
@@ -164,9 +165,8 @@ Sub FillSheetCells(resCsv As Variant)
                     fillSheet.Range("A4").Resize(1, UBound(aCsvRowData) + 1) = aCsvRowData
                 End If
             End If
-
-            nCsvCurRowx = nCsvCurRowx + 1
         End If
+        nCsvCurRowx = nCsvCurRowx + 1
     Loop
     Close #1
 
@@ -250,4 +250,5 @@ Sub LockMoldHeader(bLocked)
     End If
 
 End Sub
+
 

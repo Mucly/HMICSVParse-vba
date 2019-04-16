@@ -68,10 +68,15 @@ Private Sub CommandButton2_Click()
     offsetRows = 3
     Call writeCsvLine(maxRows, maxCols, offsetRows, moldHeadSheet, exportFile)
 
+    exportFile.writeline (",,,,")
+
     ' PART 6 Clean Merge-Sheet
     Dim mergeSht As Worksheet: Set mergeSht = Sheets("Merge")
     mergeSht.Visible = True
 
+    ' PART 7 WriteTitle
+    Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
+    mergeSht.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
     ' PART 8 Write Each Group-Sheet's Cells To The Merge-Sheet(hidden)
     ' --- Merge Scattered Sheets To The Merge-Sheet
     Dim inx1 As Integer, MergeOffsetRowx As Variant, groupShtCnts As Integer: groupShtCnts = Sheets.Count
