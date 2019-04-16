@@ -28,7 +28,7 @@ Sub DrawCharts(chartsDict As Object)
         sRange = "B3:C3," & aItem(0) & aItem(1) & ":" & aItem(2) & aItem(3)
         Range(sRange).Select ' Range("B3:C3,B4:C27").Select
         ActiveSheet.Shapes.AddChart.Select
-        ActiveChart.ChartType = xlLine
+        ActiveChart.ChartType = xlColumnClustered
 
         ' --- Set Data
         sRange = "PPH!$B$3:$C$3,PPH!" & "$" & aItem(0) & "$" & aItem(1) & ":" & "$" & aItem(2) & "$" & aItem(3) ' "PPH!$B$3:$C$3,PPH!$B$4:$C$27"
@@ -82,27 +82,27 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     ' PART 4 2rd Read, Fill a2D According Csv File & Some Global Dictionary
     Open resCsv For Input As #66
     Const meanRowx As Integer = 1
-    Const dataColx As Integer = 1
+    Const dateColx As Integer = 1
     Dim rowx As Integer, serial As Integer: serial = 1
     Dim rangeDict As Object: Set rangeDict = CreateObject("Scripting.Dictionary") ' { 0:['B', 29, 'C', 52]}
     Dim rangeInx As Integer: rangeInx = 0
     For rowx = 1 To resCsvRows
         Line Input #66, sCurLine
-        ' Fill With a Empty String
+        Dim xInx As Integer: xInx = rowx - 1
+        ' - Fill With a Empty String
         If sCurLine = "" Then
-            a2D(rowx, 0) = ""
+            a2D(xInx, 0) = ""
         Else
             aRowData = Split(sCurLine, ",")
-            Dim xInx As Integer: xInx = rowx - 1
             Dim yInx As Integer, cellValue As Variant
             For yInx = 0 To resCsvCols
                 cellValue = aRowData(yInx)
 
-                ' Get Mean
+                ' - Get Mean
                 If rowx = meanRowx Then cellValue = g_meanDict(cellValue)
 
-                ' --- Set Serial
-                If (yInx = dataColx) And (InStr(cellValue, " 01") > 0) Then
+                ' - Set Serial
+                If (yInx = dateColx) And (InStr(cellValue, " 01") > 0) Then
                     a2D(xInx, 0) = serial
                     serial = serial + 1
                     ' -- Set RangeDict
@@ -117,16 +117,13 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     Next
     Close #66
 
-    ' ' PART 5 Fill Cells Start From A3 Cell
+    ' PART 5 Fill Cells Start From A3 Cell
     Range("A3").Resize(resCsvRows + 1, resCsvCols + 1) = a2D
 
     Call DrawCharts(rangeDict)
 
-    ' ' END
-    ' Sheets(2).Activate
+    ' END
     Application.ScreenUpdating = True
     MsgBox "Success!"
 
 End Function
-
-
