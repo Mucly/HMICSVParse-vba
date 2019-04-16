@@ -50,8 +50,6 @@ Private Sub CommandButton2_Click()
         Exit Sub
     End If
 
-
-
     ' PART 4 Start Dealing Sheet's Data
     Dim Fs As Object
     Set Fs = CreateObject("Scripting.FileSystemObject")
@@ -73,11 +71,6 @@ Private Sub CommandButton2_Click()
     ' PART 6 Clean Merge-Sheet
     Dim mergeSht As Worksheet: Set mergeSht = Sheets("Merge")
     mergeSht.Visible = True
-    Call InitTargetSheet(mergeSht)
-
-    ' PART 7 Write DataID Title To mergeSht
-    Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
-    mergeSht.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
 
     ' PART 8 Write Each Group-Sheet's Cells To The Merge-Sheet(hidden)
     ' --- Merge Scattered Sheets To The Merge-Sheet
@@ -102,14 +95,15 @@ Private Sub CommandButton2_Click()
     Dim serialColx As Integer: serialColx = Application.CountA(mergeSht.Range("1:1")) + 1
     Dim rowx As Integer
     For rowx = 2 To maxRows
-        Dim sHex As String, nHex As Integer
+        Dim sHex As String, vHex As Variant
         sHex = Replace(mergeSht.Cells(rowx, 1), "0x", "&H")
-        nHex = CInt(sHex)
-        mergeSht.Cells(rowx, serialColx) = nHex
+        vHex = CLng(sHex)
+        mergeSht.Cells(rowx, serialColx) = vHex
     Next
 
     ' PART 11 Sort Merge-Sheet Accoring to Serial Colx
     Dim sSerialColx As String: sSerialColx = g_colxAlphaDict(serialColx)
+    mergeSht.Activate
     mergeSht.Columns(sSerialColx & ":" & sSerialColx).Select
     mergeSht.Sort.SortFields.Clear
     mergeSht.Sort.SortFields.Add Key:=Range(sSerialColx & "1"), _
@@ -125,7 +119,7 @@ Private Sub CommandButton2_Click()
 
     ' PART 12 Delete Serial Colx
     Dim serialAlpha As String: serialAlpha = g_colxAlphaDict(serialColx)
-    Dim sRange As String : sRange = serialAlpha & ":" & serialAlpha
+    Dim sRange As String: sRange = serialAlpha & ":" & serialAlpha
     mergeSht.Columns(sRange).Select
     Selection.Delete Shift:=xlToLeft
 
@@ -156,3 +150,5 @@ Sub ModifyCDB(moldName As String)
     csvPath = ThisWorkbook.Path & ""
 
 End Sub
+
+

@@ -19,7 +19,7 @@ Function GetDict(DB As String)
     Const cnColx As Integer = 3
     Const enColx As Integer = 4
     Const sheetColx As Integer = 5
-    Dim DataID As String, group As String, prec As String, cn As String, en As String, DBRowx As Integer, nDBRows as Variant
+    Dim DataID As String, group As String, prec As String, cn As String, en As String, DBRowx As Integer, nDBRows As Variant
     nDBRows = Application.CountA(DBSheet.Range("A:A")) + 1
 
     For DBRowx = 2 To nDBRows
@@ -30,17 +30,17 @@ Function GetDict(DB As String)
             en = DBSheet.Cells(DBRowx, enColx)
             group = DBSheet.Cells(DBRowx, sheetColx)
 
-            if group <> "" Then
+            If group <> "" Then
                 g_precDict(DataID) = prec
                 g_cnDict(DataID) = cn
                 g_enDict(DataID) = en
                 g_groupDict(DataID) = group
 
-                if Not g_sheetDict.exists(group) Then
+                If Not g_sheetDict.exists(group) Then
                     g_sheetDict(group) = group
                 End If
 
-            End if
+            End If
         End If
     Next
 
@@ -48,7 +48,8 @@ Function GetDict(DB As String)
     Dim myChar As String
     Dim inx As Integer
     For inx = 1 To 27
-        g_colxAlphaDict(inx) = chr(64 + inx)
+        g_colxAlphaDict(inx) = Chr(64 + inx)
     Next
 
 End Function
+

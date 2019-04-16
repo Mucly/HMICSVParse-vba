@@ -23,7 +23,7 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     Application.ScreenUpdating = False
 
     ' PART 1
-    Dim parseSht As Worksheet : Set parseSht = Sheets(2)
+    Dim parseSht As Worksheet: Set parseSht = Sheets(2)
     Call InitTargetSheet(parseSht)
 
     ' PART 2
@@ -67,17 +67,17 @@ Sub FillSheetCells(resCsv As Variant)
     Const cnColx As Integer = 3
     Const enColx As Integer = 4
 
-    Dim undefinedSht As Worksheet : Set undefinedSht = Sheets("undefined")
+    Dim undefinedSht As Worksheet: Set undefinedSht = Sheets("undefined")
 
     ' PART 2 Iterate csv file and fill Cells
     Do While Not EOF(1)
         Line Input #1, sCurLine
-        if sCurLine <> "" Then
+        If sCurLine <> "" Then
             aCsvRowData = Split(sCurLine, ",")
 
             Dim colx As Integer, cellValue As String, group As String
-            Dim DataID As String : DataID = aCsvRowData(0)
-            Dim fillColx As Integer : fillColx = 0
+            Dim DataID As String: DataID = aCsvRowData(0)
+            Dim fillColx As Integer: fillColx = 0
             ' the top 2 lines is MoldHeader, 3th lines is unValid, others likes [ "0x400", 123, "我是中文翻译", "English Translation" ]
             If nCsvCurRowx > 3 Then
                 Dim fillSheet As Worksheet, fillRowx As Integer
@@ -87,7 +87,7 @@ Sub FillSheetCells(resCsv As Variant)
                     Set fillSheet = Sheets(group)
                 Else
                     Set fillSheet = undefinedSht
-                End if
+                End If
 
                 ' fillRowx = fillSheet.Range("A65536").End(xlUp).Row + 1
                 fillRowx = Application.CountA(fillSheet.Range("A:A")) + 1
@@ -166,7 +166,7 @@ Sub FillSheetCells(resCsv As Variant)
             End If
 
             nCsvCurRowx = nCsvCurRowx + 1
-        End if
+        End If
     Loop
     Close #1
 
@@ -183,11 +183,11 @@ Sub CreateSheets(sheetsDict As Object)
     Dim aKeys As Variant, nInx As Integer
     aKeys = sheetsDict.keys
 
+    Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
     Dim newShtCnts As Integer: newShtCnts = UBound(aKeys)
     For nInx = 0 To newShtCnts
         Sheets.Add After:=moldHeadSheet
         ActiveSheet.Name = aKeys(nInx)
-        Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
         ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
     Next
 
@@ -199,6 +199,7 @@ Sub CreateSheets(sheetsDict As Object)
     ' Create undefined-Sheet, use for saving those dataID which undefined in database-sheet
     Sheets.Add After:=moldHeadSheet
     ActiveSheet.Name = "undefined"
+    ActiveSheet.Range("A1").Resize(1, UBound(aTitle) + 1) = aTitle
     ActiveWindow.SelectedSheets.Visible = False
 
 End Sub
@@ -249,3 +250,4 @@ Sub LockMoldHeader(bLocked)
     End If
 
 End Sub
+
