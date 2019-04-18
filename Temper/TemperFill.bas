@@ -10,7 +10,7 @@ Sub BeautySheets()
     ' PART 1 Format Time Colx
     Const dataColx As Integer = 2
     Dim maxCols  As Integer: maxCols = Application.CountA(ActiveSheet.Range("A:A")) + 3
-    Range("B3:B" & maxCols).NumberFormat = "yyyy-m-d hh:mm:ss"
+    Range("B3:" & "B" & maxCols).NumberFormat = "yyyy-m-d hh:mm:ss"
 End Sub
 
 Sub FormatColWithPrecison(precDict As Object)
@@ -40,7 +40,7 @@ Sub DelEachSegSheets()
     Application.DisplayAlerts = True
 End Sub
 
-Sub CreateEachSegSheets()
+Sub CreateEachSegSheets(cols As Integer)
     ' PART 1 Del Sheets
     Call DelEachSegSheets
 
@@ -48,34 +48,30 @@ Sub CreateEachSegSheets()
     Dim aSegSheetName As Variant: aSegSheetName = g_meanDict.Items
     Dim inx As Integer
     Dim parseSht As Worksheet: Set parseSht = Sheets(2)
-    Dim name As Integer: name = 1
+    Dim name As Integer: name = 0
     Dim maxCols  As Integer: maxCols = Application.CountA(ActiveSheet.Range("A:A")) + 2
-    For inx = 2 To UBound(aSegSheetName)
-        Dim colx As Integer: colx = inx + 1
+    Dim colx As Integer
+    For colx = 3 To cols
         ' Each Chart's Title Depend On Odd Colx's Title
-        If (colx Mod 2) <> 0 Then
+        If g_TempSheetsDict(colx) <> "" Then
             Sheets.Add After:=parseSht
-            ActiveSheet.name = "#" & name
-
+            ActiveSheet.name = g_TempSheetsDict(colx)
             Dim sTimeRange As String, sTemperRange As String, sRange As String
             sTimeRange = "Temper!$B$3" & ":$B$" & maxCols ' Time Col， eg. "Temper!$B3:B$16"
             sTemperRange = "Temper!$" & g_colxAlphaDict(colx) & "$3" & ":$" & g_colxAlphaDict(colx + 1) & "$" & maxCols ' Temper Cols， eg. Temper!$D$3:$E$6"
             sRange = sTimeRange & "," & sTemperRange
-
-            ActiveSheet.Shapes.AddChart.Select
-            ActiveChart.ChartType = xlLine
-            ' ActiveChart.SetSourceData Source:=Range("Temper!$B$3:$B$6,Temper!$D$3:$E$6")
-            ActiveChart.SetSourceData Source:=Range(sRange)
-            ActiveChart.ApplyLayout (3)
-            ActiveChart.Axes(xlCategory).Select
-            ActiveChart.Axes(xlCategory).CategoryType = xlCategoryScale
-            ActiveChart.ChartTitle.Select
-            ActiveChart.ChartTitle.Text = "Temper #" & name
-            Selection.Format.TextFrame2.TextRange.Characters.Text = "Temper #" & name
-
-            ' Cells(6,1).Select
-            name = name + 1
         End If
+        ActiveSheet.Shapes.AddChart.Select
+        ActiveChart.ChartType = xlLine
+
+        ActiveChart.SetSourceData Source:=Range(sRange) ' Range("Temper!$B$3:$B$6,Temper!$D$3:$E$6")
+        ActiveChart.ApplyLayout (3)
+        ActiveChart.Axes(xlCategory).Select
+        ActiveChart.Axes(xlCategory).CategoryType = xlCategoryScale
+        ActiveChart.ChartTitle.Select
+        ActiveChart.ChartTitle.Text = "Temper " & ActiveSheet.name
+        Selection.Format.TextFrame2.TextRange.Characters.Text = "Temper " & ActiveSheet.name
+        'End If
     Next
 
 End Sub
@@ -85,7 +81,7 @@ Function ParseCsvAndFillCell(resCsv As Variant, fillRowx As Integer)
     Application.ScreenUpdating = False
     Call ClearCurSheet
 
-    ' PART 2 Fill Cells By Two Dimentions Array
+    ' PART 2 Fill Cells By Lines, Not By Two Dimentions Array
     Dim resCsvRowx As Integer: resCsvRowx = 0
     Dim sCurLine As String: sCurLine = ""
     Dim aRowData As Variant
@@ -121,6 +117,9 @@ Function ParseCsvAndFillCell(resCsv As Variant, fillRowx As Integer)
             cellValue = aRowData(resCsvColx)
             ' Translate Title(Rowx1) And Reset g_tagPrecDict
             If resCsvRowx = 0 Then
+                If (fillColx > 2) And (fillColx Mod 2 <> 0) And cellValue <> "" Then
+                    g_TempSheetsDict(fillColx) = Split(cellValue, " ")(0)
+                End If
                 ' 1 - Get Translate
                 If g_meanDict.exists(cellValue) Then
                     cellValue = g_meanDict(cellValue)
@@ -179,7 +178,7 @@ Function ParseCsvAndFillCell(resCsv As Variant, fillRowx As Integer)
 
     ' PART 6 Beauty And Create Sheets, Then Draw Charts
     Call BeautySheets
-    Call CreateEachSegSheets
+    Call CreateEachSegSheets(resCsvCols)
 
     ' END
     Sheets(2).Activate
