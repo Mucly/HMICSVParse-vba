@@ -39,7 +39,7 @@ Function ParseCsvAndFillCell(resCsv As Variant)
     Sheets(2).Activate
 
     Application.ScreenUpdating = True  ' Restore
-    MsgBox "Success！"
+    MsgBox "汇入成功！"
 
 End Function
 ' TODO

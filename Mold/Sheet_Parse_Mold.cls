@@ -4,7 +4,7 @@ Private Sub CommandButton1_Click()
     ' PART 1 get Dict
     Dim DBSheet As Object
 
-    Call GetDict("对照表")
+    Call GetDict(1)
 
     ' PART 2 file explorer
     Dim csvRes As Variant
@@ -14,7 +14,10 @@ Private Sub CommandButton1_Click()
         Exit Sub
     Else
         Call ParseCsvAndFillCell(csvRes)
+
     End If
+
+    SaveSetting "path", "csvPath", "resCsvPath", csvRes '将源csv文件的完整路径存放到注册表中
 End Sub
 
 Sub writeCsvLine(rows As Integer, cols As Integer, offset As Integer, dataSheet As Worksheet, expFile As Object)
@@ -39,7 +42,7 @@ Private Sub CommandButton2_Click()
     Application.ScreenUpdating = False
 
     ' PART 2 Get Dict
-    Call GetDict("对照表")
+    Call GetDict(1)
 
     ' PART 3 Pop File-Explorer
     Dim moldHeadSheet As Worksheet: Set moldHeadSheet = Sheets(2)
@@ -73,6 +76,7 @@ Private Sub CommandButton2_Click()
     ' PART 6 Clean Merge-Sheet
     Dim mergeSht As Worksheet: Set mergeSht = Sheets("Merge")
     mergeSht.Visible = True
+    Call InitTargetSheet(mergeSht)
 
     ' PART 7 WriteTitle
     Dim aTitle As Variant: aTitle = Array("DataID", "DataValue", "Description#1", "Description#2")
@@ -144,16 +148,78 @@ Private Sub CommandButton2_Click()
     Sheets(2).Activate
     Application.ScreenUpdating = True  ' Restore
 
-    ' call ModifyCDB(fileName)
+    Call GetResCdbPath(1)
+    Dim fso
+    Set fso = CreateObject("Scripting.Filesystemobject")
 
-    MsgBox "Export Success!"
+    If fso.FileExists(resCdbPathName) Then '判断源cdb文件是否存在
+        Dim resCdbPath As String: resCdbPath = resCdbPathName
+        Dim bData As Byte
+
+        ' resource
+        Open resCdbPath For Binary As #66
+        Dim colxx As Integer, row As Variant: row = 5
+
+        ' destination
+        Dim dstCdbPath As String, resDir As String, resCsv As String, resCdb As String
+        Dim newCdb As String, resName As String
+        resDir = GetSetting("csvTools", "MoldToolPath", "resDir")
+        resCdb = GetSetting("csvTools", "MoldToolPath", "resCdb")
+        resName = GetSetting("csvTools", "MoldToolPath", "resName")
+        newCdb = Replace(resCdb, resName, fileName)
+        dstCdbPath = resDir + newCdb
+        Debug.Print dstCdbPath
+        If fso.FileExists(dstCdbPath) Then Kill dstCdbPath ' delete exists dst csb file
+        Open dstCdbPath For Binary As #99
+
+        Const maxMoldLen As Integer = 40
+        Dim moldName As String: moldName = Range("A4")
+        Dim moldNameLen As Integer: moldNameLen = Len(moldName)
+        Dim aMoldName(maxMoldLen) As Variant
+        Dim item As String, inx As Integer, inxAdd1 As Integer
+
+        For inx = 0 To (maxMoldLen - 1)
+            inxAdd1 = inx + 1
+            If (inxAdd1 <= moldNameLen) Then aMoldName(inx) = Asc(Mid(moldName, inxAdd1, 1))
+        Next
+
+        Dim bytesCnt As Integer: bytesCnt = LOF(66) - 1
+        Dim byteX As Integer
+        For byteX = 0 To bytesCnt
+            Get #66, , bData
+            If byteX < 40 Then
+                bData = aMoldName(byteX)
+            End If
+
+            Put #99, , bData
+        Next
+        Close #66
+        Close #99
+
+    End If
+    MsgBox "汇出成功!"
 
 End Sub
 
-Sub ModifyCDB(moldName As String)
-    Dim csvPath As String
-    csvPath = ThisWorkbook.Path & ""
+Sub GetResCdbPath(inx As Integer)
+    Dim resCsvPathName As String, aResCsvPath As Variant, pathNameCnt As Integer, cdbName As String
+    Dim sCdbPath As String, pathNum As Integer
+    Dim aCdbName As Variant
+    resCsvPathName = GetSetting("path", "csvPath", "resCsvPath") '获取注册表中的当前完整路径名
 
+    aResCsvPath = Split(resCsvPathName, "\") '路径按照\分割，将分割后的内容保存到数组中
+    pathNameCnt = UBound(aResCsvPath)        '获取当前数组的最大下标
+
+    If resCsvPathName <> "" Then
+        cdbName = Replace(aResCsvPath(pathNameCnt), "csv", "cdb") '将csv后缀替换成cdb，得到cdb文件完整名称
+        aCdbName = Split(cdbName, ".") '获取源名,如 666.cdb,截取666
+        For pathNum = 0 To pathNameCnt - 1    '循环，得到cdb文件完整路径
+            resCdbPathName = resCdbPathName + aResCsvPath(pathNum) + "\"
+        Next
+        SaveSetting "csvTools", "MoldToolPath", "resDir", resCdbPathName    '例：C:\Users\xuwb\Desktop\moldset-cly\
+        SaveSetting "csvTools", "MoldToolPath", "resCsv", aResCsvPath(pathNameCnt)   '例：145.csv
+        SaveSetting "csvTools", "MoldToolPath", "resCdb", cdbName                    '例：145.cdb
+        SaveSetting "csvTools", "MoldToolPath", "resName", aCdbName(0)               '例：145
+        resCdbPathName = resCdbPathName + cdbName               '例：C:\Users\xuwb\Desktop\moldset-cly\145.cdb
+    End If
 End Sub
-
-

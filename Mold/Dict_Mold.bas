@@ -1,9 +1,9 @@
 Option Explicit
 ' * GetDict  k=DataID，v=translated content
-Function GetDict(DB As String)
+Function GetDict(shtInx As Integer)
     ' PART 1 init DBSheet
     Dim DBSheet As Worksheet
-    Set DBSheet = Worksheets(DB)
+    Set DBSheet = Sheets(shtInx)
 
     ' PART 2 Init Dict
     Set g_precDict = CreateObject("Scripting.Dictionary")
