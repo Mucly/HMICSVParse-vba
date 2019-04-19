@@ -152,12 +152,10 @@ Private Sub CommandButton2_Click()
     Dim fso
     Set fso = CreateObject("Scripting.Filesystemobject")
 
-    If fso.FileExists(resCdbPathName) Then '判断源cdb文件是否存在
-        Dim resCdbPath As String: resCdbPath = resCdbPathName
+    If fso.FileExists(resCdbPath) Then '判断源cdb文件是否存在
         Dim bData As Byte
 
         ' resource
-        Open resCdbPath For Binary As #66
         Dim colxx As Integer, row As Variant: row = 5
 
         ' destination
@@ -168,34 +166,37 @@ Private Sub CommandButton2_Click()
         resName = GetSetting("csvTools", "MoldToolPath", "resName")
         newCdb = Replace(resCdb, resName, fileName)
         dstCdbPath = resDir + newCdb
-        Debug.Print dstCdbPath
-        If fso.FileExists(dstCdbPath) Then Kill dstCdbPath ' delete exists dst csb file
-        Open dstCdbPath For Binary As #99
 
-        Const maxMoldLen As Integer = 40
-        Dim moldName As String: moldName = Range("A4")
-        Dim moldNameLen As Integer: moldNameLen = Len(moldName)
-        Dim aMoldName(maxMoldLen) As Variant
-        Dim item As String, inx As Integer, inxAdd1 As Integer
+        If dstCdbPath <> resCdbPath Then
+            If fso.FileExists(dstCdbPath) Then Kill dstCdbPath ' delete exists dst csb file
+            Open resCdbPath For Binary As #66
+            Open dstCdbPath For Binary As #99
 
-        For inx = 0 To (maxMoldLen - 1)
-            inxAdd1 = inx + 1
-            If (inxAdd1 <= moldNameLen) Then aMoldName(inx) = Asc(Mid(moldName, inxAdd1, 1))
-        Next
+            Const maxMoldLen As Integer = 40
+            Dim moldName As String: moldName = Range("A4")
+            Dim moldNameLen As Integer: moldNameLen = Len(moldName)
+            Dim aMoldName(maxMoldLen) As Variant
+            Dim item As String, inx As Integer, inxAdd1 As Integer
 
-        Dim bytesCnt As Integer: bytesCnt = LOF(66) - 1
-        Dim byteX As Integer
-        For byteX = 0 To bytesCnt
-            Get #66, , bData
-            If byteX < 40 Then
-                bData = aMoldName(byteX)
-            End If
+            For inx = 0 To (maxMoldLen - 1)
+                inxAdd1 = inx + 1
+                If (inxAdd1 <= moldNameLen) Then aMoldName(inx) = Asc(Mid(moldName, inxAdd1, 1))
+            Next
 
-            Put #99, , bData
-        Next
-        Close #66
-        Close #99
+            Dim bytesCnt As Integer: bytesCnt = LOF(66) - 1
+            Dim byteX As Integer
+            For byteX = 0 To bytesCnt
+                Get #66, , bData
+                If byteX < 40 Then
+                    bData = aMoldName(byteX)
+                End If
 
+                Put #99, , bData
+            Next
+            Close #66
+            Close #99
+
+        End If
     End If
     MsgBox "汇出成功!"
 
@@ -203,7 +204,7 @@ End Sub
 
 Sub GetResCdbPath(inx As Integer)
     Dim resCsvPathName As String, aResCsvPath As Variant, pathNameCnt As Integer, cdbName As String
-    Dim sCdbPath As String, pathNum As Integer
+    Dim sCdbPath As String, pathNum As Integer, resCdbPathName As String
     Dim aCdbName As Variant
     resCsvPathName = GetSetting("path", "csvPath", "resCsvPath") '获取注册表中的当前完整路径名
 
@@ -220,6 +221,7 @@ Sub GetResCdbPath(inx As Integer)
         SaveSetting "csvTools", "MoldToolPath", "resCsv", aResCsvPath(pathNameCnt)   '例：145.csv
         SaveSetting "csvTools", "MoldToolPath", "resCdb", cdbName                    '例：145.cdb
         SaveSetting "csvTools", "MoldToolPath", "resName", aCdbName(0)               '例：145
-        resCdbPathName = resCdbPathName + cdbName               '例：C:\Users\xuwb\Desktop\moldset-cly\145.cdb
+        resCdbPath = resCdbPathName + cdbName               '例：C:\Users\xuwb\Desktop\moldset-cly\145.cdb
+
     End If
 End Sub
